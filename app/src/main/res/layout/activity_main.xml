@@ -22,6 +22,9 @@
             android:text="PILIH VIDEO"
             app:icon="@android:drawable/ic_menu_gallery" />
 
+        <TextView android:id="@+id/tvSelected" android:layout_width="match_parent" android:layout_height="wrap_content" 
+                  android:text="Belum ada video dipilih" android:gravity="center" android:layout_marginTop="8dp"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -41,6 +44,5 @@
 
         <ProgressBar android:id="@+id/progressBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" style="?android:attr/progressBarStyleHorizontal"/>
         <TextView android:id="@+id/tvStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:layout_marginTop="20dp"/>
-        <LinearLayout android:id="@+id/listContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp"/>
     </LinearLayout>
 </ScrollView>
