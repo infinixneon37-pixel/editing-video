@@ -6,13 +6,14 @@ plugins {
 android {
     namespace 'com.editingvideo.app'
     compileSdk 35
-    
+
     defaultConfig {
         applicationId "com.editingvideo.app"
         minSdk 24
         targetSdk 35
         versionCode 1
         versionName "1.0"
+
         multiDexEnabled true
     }
 
@@ -22,16 +23,18 @@ android {
     }
 
     splits {
-        abi { 
+        abi {
             enable true
             reset()
-            include 'arm64-v8a'
-            universalApk false 
+            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            universalApk true
         }
     }
-    
-    packaging { 
-        jniLibs { useLegacyPackaging true } 
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
     }
 }
 

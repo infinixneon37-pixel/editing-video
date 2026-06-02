@@ -12,11 +12,9 @@ permissions:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -34,12 +32,14 @@ jobs:
         run: ./gradlew clean assembleDebug --no-daemon --stacktrace
 
       - name: Show APK files
-        run: find . -name "*.apk"
+        run: |
+          echo "APK files found:"
+          find app/build/outputs -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: editing-video-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 30
