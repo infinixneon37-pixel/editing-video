@@ -97,17 +97,18 @@ public class MainActivity extends AppCompatActivity {
                     setLoading(false);
                     tvSelectedFile.setText("File Siap: " + new File(selectedVideoPath).getName());
                     tvSelectedFile.setTextColor(Color.parseColor("#10B981"));
+                    updateStatus("Standby. Video siap diproses!");
                 });
             }).start();
         }
     }
 
-    // ==========================================
-    // FFMPEG IMPLEMENTATION
-    // ==========================================
     private void processTrim(boolean keepAudio) {
         double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
         setLoading(true);
+        updateStatus("Menganalisa durasi...");
+        listContainer.removeAllViews();
+
         new Thread(() -> {
             try {
                 double totalDur = getVideoDuration(selectedVideoPath);
@@ -117,23 +118,19 @@ public class MainActivity extends AppCompatActivity {
 
                 while (currentStart < totalDur) {
                     final int currentPart = part;
+                    runOnUiThread(() -> updateStatus("✂️ Mengekstrak Part " + currentPart + "..."));
                     String outName = fileName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                     String outPath = privateDir + "/" + outName;
                     
-                    // GANTI ENCODER: libx264 -> mpeg4 agar tembus binary kamu
-                    String audioCmd = keepAudio ? "-c:a aac -b:a 128k" : "-an";
                     String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s \"%s\"", 
-                                 currentStart, d_segment, selectedVideoPath, audioCmd, outPath);
+                                 currentStart, d_segment, selectedVideoPath, keepAudio ? "-c:a aac -b:a 128k" : "-an", outPath);
 
                     FFmpegSession session = FFmpegKit.execute(cmd);
                     if (ReturnCode.isSuccess(session.getReturnCode())) {
                         moveToPublicFolder(outPath, outName);
                         runOnUiThread(() -> addToListResult("✅ " + outName));
-                    } else {
-                        throw new Exception(session.getLogsAsString());
-                    }
-                    currentStart += d_segment;
-                    part++;
+                    } else { throw new Exception(session.getLogsAsString()); }
+                    currentStart += d_segment; part++;
                 }
                 finishTask("✨ Trim Selesai!");
             } catch (Exception e) { finishError(e.getMessage()); }
@@ -142,26 +139,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void processButterLoop(int targetDur) {
         setLoading(true);
+        updateStatus("Mempersiapkan Filter...");
+        listContainer.removeAllViews();
+
         new Thread(() -> {
             try {
                 double dur = getVideoDuration(selectedVideoPath);
                 String tempUnit = privateDir + "/temp_unit.mp4";
                 String finalOut = privateDir + "/smooth_" + new File(selectedVideoPath).getName();
 
-                // Tahap 1: Reverse
                 String filterComplex = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
                 String cmd1 = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v mpeg4 -q:v 3 \"%s\"", selectedVideoPath, filterComplex, tempUnit);
                 
-                FFmpegSession s1 = FFmpegKit.execute(cmd1);
-                if (!ReturnCode.isSuccess(s1.getReturnCode())) throw new Exception(s1.getLogsAsString());
+                if (!ReturnCode.isSuccess(FFmpegKit.execute(cmd1).getReturnCode())) throw new Exception("Gagal Reverse");
 
-                // Tahap 2: Loop
                 double unitDur = dur * 2;
                 int numLoops = (int) (targetDur / unitDur) + 1;
                 String cmd2 = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, tempUnit, targetDur, finalOut);
                 
-                FFmpegSession s2 = FFmpegKit.execute(cmd2);
-                if (!ReturnCode.isSuccess(s2.getReturnCode())) throw new Exception(s2.getLogsAsString());
+                if (!ReturnCode.isSuccess(FFmpegKit.execute(cmd2).getReturnCode())) throw new Exception("Gagal Loop");
 
                 new File(tempUnit).delete();
                 moveToPublicFolder(finalOut, "smooth_" + new File(selectedVideoPath).getName());
@@ -170,13 +166,33 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // UTILS
-    private void finishTask(String msg) {
-        runOnUiThread(() -> { setLoading(false); updateStatus(msg); });
+    // UTILITIES
+    private void addToListResult(String text) {
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextColor(Color.parseColor("#10B981"));
+        listContainer.addView(tv);
     }
-    private void finishError(String msg) {
-        runOnUiThread(() -> { setLoading(false); updateStatus("❌ Error"); tvConsoleLog.setText(msg); });
+    private double getVideoDuration(String path) {
+        MediaInformationSession s = FFprobeKit.getMediaInformation(path);
+        return (s.getMediaInformation() != null) ? Double.parseDouble(s.getMediaInformation().getDuration()) : 0;
     }
-    // (copyUriToPrivate, moveToPublicFolder, getVideoDuration tetap sama)
-    // ...
+    private void moveToPublicFolder(String sPath, String name) {
+        File s = new File(sPath); File d = new File(publicDir, name);
+        try (InputStream in = new FileInputStream(s); OutputStream out = new FileOutputStream(d)) {
+            byte[] b = new byte[2048]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l); s.delete();
+        } catch (Exception e) { Log.e("Move", e.getMessage()); }
+    }
+    private String copyUriToPrivate(Uri u) {
+        File f = new File(privateDir, "tmp_" + System.currentTimeMillis() + ".mp4");
+        try (InputStream in = getContentResolver().openInputStream(u); OutputStream out = new FileOutputStream(f)) {
+            byte[] b = new byte[2048]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l);
+        } catch (Exception e) { e.printStackTrace(); }
+        return f.getAbsolutePath();
+    }
+    private void updateStatus(String msg) { tvStatus.setText(msg); tvConsoleLog.setText(""); }
+    private void finishTask(String msg) { runOnUiThread(() -> { setLoading(false); updateStatus(msg); }); }
+    private void finishError(String m) { runOnUiThread(() -> { setLoading(false); updateStatus("❌ Error"); tvConsoleLog.setText(m); }); }
+    private void setLoading(boolean b) { progressBar.setVisibility(b?View.VISIBLE:View.GONE); btnTrimWithAudio.setEnabled(!b); btnTrimNoAudio.setEnabled(!b); btnLoop.setEnabled(!b); }
+    private void showToast(String m) { Toast.makeText(this, m, Toast.LENGTH_SHORT).show(); }
 }
