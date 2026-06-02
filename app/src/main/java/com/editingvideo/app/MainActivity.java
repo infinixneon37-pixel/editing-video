@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText etTrimSegment, etLoopDuration;
     private Button btnSelectVideo, btnTrim, btnLoop;
     private ProgressBar progressBar;
-    
+
     private String selectedVideoPath = null;
     private String privateDir;
     private String publicDir;
@@ -120,17 +120,15 @@ public class MainActivity extends AppCompatActivity {
                 String fileName = new File(inputPath).getName().replaceAll("[.][^.]+$", ""); // Hapus ekstensi
 
                 while (currentStart < totalDur) {
-                    final int currentPart = part;
+                    final int currentPart = part; // Variabel final agar bisa dibaca lambda
                     runOnUiThread(() -> updateStatus("Mengekstrak Part " + currentPart + "..."));
 
                     String outName = fileName + "_part" + String.format("%03d", part) + ".mp4";
                     String outPrivatePath = privateDir + "/" + outName;
 
-                    // Menggunakan format titik desimal (Locale.US) yang kebal bug koma Indonesia
                     String startStr = String.format(Locale.US, "%.3f", currentStart);
                     String durStr = String.format(Locale.US, "%.3f", d_segment);
 
-                    // MENGGUNAKAN ARGUMENT ARRAY (Lebih aman dari bug string bash)
                     String[] cmdArray = new String[]{
                             "-y", "-ss", startStr, "-t", durStr,
                             "-i", inputPath,
@@ -138,7 +136,6 @@ public class MainActivity extends AppCompatActivity {
                             outPrivatePath
                     };
 
-                    // Execute Asynchronous dengan tangkapan Log
                     com.arthenica.ffmpegkit.FFmpegSession session = FFmpegKit.executeWithArguments(cmdArray);
 
                     if (ReturnCode.isSuccess(session.getReturnCode())) {
@@ -150,10 +147,11 @@ public class MainActivity extends AppCompatActivity {
                     currentStart += d_segment;
                     part++;
                 }
-                
+
+                final int totalFiles = part - 1; // Variabel final untuk menampilkan total
                 runOnUiThread(() -> {
                     setLoading(false);
-                    updateStatus("✅ Trim Sukses! (" + (part - 1) + " file)");
+                    updateStatus("✅ Trim Sukses! (" + totalFiles + " file)");
                     tvConsoleLog.setText("Tersimpan di: Movies/EditingVideo");
                 });
 
@@ -186,7 +184,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> updateStatus("Tahap 1: Membangun efek maju-mundur (Reverse)..."));
 
                 String filterComplex = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
-                
+
                 String[] cmdUnit = new String[]{
                         "-y", "-i", inputPath,
                         "-filter_complex", filterComplex,
@@ -216,9 +214,7 @@ public class MainActivity extends AppCompatActivity {
                     throw new Exception("Gagal di Tahap 2: " + session2.getFailStackTrace());
                 }
 
-                // Bersihkan temp file
                 new File(tempUnit).delete();
-                // Pindah hasil
                 moveToPublicFolder(finalPrivateOutput, "smooth_" + fileName);
 
                 runOnUiThread(() -> {
@@ -258,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
             while ((len = in.read(buf)) > 0) {
                 out.write(buf, 0, len);
             }
-            source.delete(); // Wajib dihapus agar storage private aplikasi gak bengkak
+            source.delete();
         } catch (Exception e) {
             Log.e("MoveFile", "Gagal copy: " + e.getMessage());
         }
@@ -281,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateStatus(String msg) {
         tvStatus.setText(msg);
-        tvConsoleLog.setText(""); // Reset log error
+        tvConsoleLog.setText(""); 
     }
 
     private void setLoading(boolean isLoading) {
@@ -290,7 +286,7 @@ public class MainActivity extends AppCompatActivity {
         btnLoop.setEnabled(!isLoading);
         btnSelectVideo.setEnabled(!isLoading);
     }
-    
+
     private void showToast(String msg) {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
