@@ -19,14 +19,22 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Clean Gradle Cache
+        run: |
+          rm -rf ~/.gradle/caches
+          rm -rf ~/.gradle/wrapper
+
       - name: Grant execute permission
         run: chmod +x gradlew
 
-      - name: Show runtime classpath
-        run: ./gradlew app:dependencies --configuration debugRuntimeClasspath
+      - name: Clean Project
+        run: ./gradlew clean
+
+      - name: Show Dependencies
+        run: ./gradlew app:dependencies
 
       - name: Build APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --refresh-dependencies --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
