@@ -8,10 +8,11 @@ android {
 
     defaultConfig {
         applicationId "com.editingvideo.app"
-        minSdk 21
+        minSdk 24 // FFmpegKit membutuhkan minimum SDK 24
         targetSdk 35
         versionCode 1
         versionName "1.0"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -28,13 +29,32 @@ android {
     buildFeatures {
         viewBinding true
     }
+
+    // Memfilter hanya arsitektur arm64-v8a sesuai request
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a'
+            universalApk false
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.0'
 
-    // Memaksa versi library turunan Kotlin ke 1.8.22 
-    // agar selaras dan menghindari error "Duplicate class"
+    // FFmpegKit (Versi aman yang abang request sebelumnya)
+    implementation 'io.github.maitrungduc1410:ffmpeg-kit-https:6.0.1'
+
+    // Memaksa versi library turunan Kotlin ke 1.8.22
+    // agar selaras dan menghindari error "Duplicate class" di GitHub Actions
     constraints {
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22")
         implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22")

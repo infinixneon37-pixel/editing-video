@@ -1,22 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
-
-    <ImageView
-        android:layout_width="160dp"
-        android:layout_height="160dp"
-        android:src="@drawable/logo"/>
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/app_name"
-        android:textSize="24sp"
+        android:text="Premium Video Splitter &amp; Looper"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"/>
+
+    <Button
+        android:id="@+id/btnSelectVideo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1. Pilih Video" />
+
+    <TextView
+        android:id="@+id/tvSelectedFile"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Belum ada file dipilih"
+        android:textColor="#FF0000"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/etTrimSegment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Durasi Potong (detik, misal: 0.5)"
+        android:inputType="numberDecimal" />
+
+    <Button
+        android:id="@+id/btnTrim"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="2A. Eksekusi Trim (Tanpa Audio)" />
+
+    <EditText
+        android:id="@+id/etLoopDuration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Target Durasi Loop (detik, misal: 15)"
+        android:inputType="number"
         android:layout_marginTop="16dp"/>
+
+    <Button
+        android:id="@+id/btnLoop"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="2B. Eksekusi Butter Loop" />
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Status: Standby"
+        android:textStyle="bold" />
 
 </LinearLayout>
