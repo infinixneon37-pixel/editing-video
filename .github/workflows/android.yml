@@ -22,6 +22,9 @@ jobs:
       - name: Grant execute permission
         run: chmod +x gradlew
 
+      - name: Show runtime classpath
+        run: ./gradlew app:dependencies --configuration debugRuntimeClasspath
+
       - name: Build APK
         run: ./gradlew assembleDebug --stacktrace
 
