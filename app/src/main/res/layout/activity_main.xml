@@ -22,19 +22,18 @@
             android:gravity="center"
             android:layout_marginBottom="24dp"/>
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/btnSelectVideo"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:text="PILIH VIDEO"
-            app:icon="@android:drawable/ic_menu_gallery"
-            app:iconGravity="textStart" />
+            android:text="PILIH VIDEO" />
 
         <TextView
             android:id="@+id/tvSelectedFile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp"
             android:text="Belum ada video dipilih"
             android:textAlignment="center"
             android:textSize="12sp" />
@@ -42,8 +41,8 @@
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Durasi Potong (detik)">
+            android:hint="Durasi Potong (detik)"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTrimSegment"
                 android:layout_width="match_parent"
