@@ -5,9 +5,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,25 +18,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFprobeKit;
 import com.arthenica.ffmpegkit.MediaInformationSession;
+import com.arthenica.ffmpegkit.ReturnCode;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvSelectedFile, tvStatus;
+    private TextView tvSelectedFile, tvStatus, tvConsoleLog;
     private EditText etTrimSegment, etLoopDuration;
     private Button btnSelectVideo, btnTrim, btnLoop;
+    private ProgressBar progressBar;
     
     private String selectedVideoPath = null;
     private String privateDir;
     private String publicDir;
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,17 +45,17 @@ public class MainActivity extends AppCompatActivity {
 
         tvSelectedFile = findViewById(R.id.tvSelectedFile);
         tvStatus = findViewById(R.id.tvStatus);
+        tvConsoleLog = findViewById(R.id.tvConsoleLog);
         etTrimSegment = findViewById(R.id.etTrimSegment);
         etLoopDuration = findViewById(R.id.etLoopDuration);
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
         btnTrim = findViewById(R.id.btnTrim);
         btnLoop = findViewById(R.id.btnLoop);
+        progressBar = findViewById(R.id.progressBar);
 
-        // Path Private & Public
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
 
-        // Buat folder publik jika belum ada
         File pubFolder = new File(publicDir);
         if (!pubFolder.exists()) pubFolder.mkdirs();
 
@@ -63,13 +66,19 @@ public class MainActivity extends AppCompatActivity {
         });
 
         btnTrim.setOnClickListener(v -> {
-            if (selectedVideoPath == null) return;
+            if (selectedVideoPath == null) {
+                showToast("Pilih video dulu, Bang!");
+                return;
+            }
             double segment = Double.parseDouble(etTrimSegment.getText().toString().isEmpty() ? "0.5" : etTrimSegment.getText().toString());
             processTrim(selectedVideoPath, segment);
         });
 
         btnLoop.setOnClickListener(v -> {
-            if (selectedVideoPath == null) return;
+            if (selectedVideoPath == null) {
+                showToast("Pilih video dulu, Bang!");
+                return;
+            }
             int targetDur = Integer.parseInt(etLoopDuration.getText().toString().isEmpty() ? "15" : etLoopDuration.getText().toString());
             processButterLoop(selectedVideoPath, targetDur);
         });
@@ -79,82 +88,158 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 101 && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData();
-            selectedVideoPath = copyUriToPrivate(uri);
-            tvSelectedFile.setText("Terpilih: " + new File(selectedVideoPath).getName());
-            tvSelectedFile.setTextColor(0xFF00AA00);
+            setLoading(true);
+            updateStatus("Menyalin video ke folder aman...");
+            new Thread(() -> {
+                Uri uri = data.getData();
+                selectedVideoPath = copyUriToPrivate(uri);
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    tvSelectedFile.setText("File Siap: " + new File(selectedVideoPath).getName());
+                    tvSelectedFile.setTextColor(0xFF4CAF50); // Hijau
+                    updateStatus("Video siap diproses!");
+                });
+            }).start();
         }
     }
 
+    // ==========================================
+    // 1. TRIM PROCESS PRO-LEVEL
+    // ==========================================
     private void processTrim(String inputPath, double d_segment) {
-        updateStatus("Memulai Trim...");
-        executor.execute(() -> {
+        setLoading(true);
+        updateStatus("Memulai Trim (menganalisa durasi)...");
+
+        new Thread(() -> {
             try {
                 double totalDur = getVideoDuration(inputPath);
+                if (totalDur == 0) throw new Exception("Video tidak valid/rusak.");
+
                 double currentStart = 0.0;
                 int part = 1;
-                String fileName = new File(inputPath).getName().replace(".mp4", "").replace(".mov", "");
+                String fileName = new File(inputPath).getName().replaceAll("[.][^.]+$", ""); // Hapus ekstensi
 
                 while (currentStart < totalDur) {
                     final int currentPart = part;
-                    runOnUiThread(() -> tvStatus.setText("Processing Part " + currentPart + "..."));
+                    runOnUiThread(() -> updateStatus("Mengekstrak Part " + currentPart + "..."));
 
                     String outName = fileName + "_part" + String.format("%03d", part) + ".mp4";
                     String outPrivatePath = privateDir + "/" + outName;
 
-                    String cmd = String.format("-y -ss %.3f -t %.3f -i \"%s\" -c:v libx264 -preset ultrafast -crf 23 -an \"%s\"",
-                            currentStart, d_segment, inputPath, outPrivatePath);
+                    // Menggunakan format titik desimal (Locale.US) yang kebal bug koma Indonesia
+                    String startStr = String.format(Locale.US, "%.3f", currentStart);
+                    String durStr = String.format(Locale.US, "%.3f", d_segment);
 
-                    FFmpegKit.execute(cmd);
-                    moveToPublicFolder(outPrivatePath, outName);
+                    // MENGGUNAKAN ARGUMENT ARRAY (Lebih aman dari bug string bash)
+                    String[] cmdArray = new String[]{
+                            "-y", "-ss", startStr, "-t", durStr,
+                            "-i", inputPath,
+                            "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23", "-an",
+                            outPrivatePath
+                    };
+
+                    // Execute Asynchronous dengan tangkapan Log
+                    com.arthenica.ffmpegkit.FFmpegSession session = FFmpegKit.executeWithArguments(cmdArray);
+
+                    if (ReturnCode.isSuccess(session.getReturnCode())) {
+                        moveToPublicFolder(outPrivatePath, outName);
+                    } else {
+                        throw new Exception("FFmpeg Gagal Part " + part + "\nLog: " + session.getFailStackTrace());
+                    }
 
                     currentStart += d_segment;
                     part++;
                 }
-                updateStatus("✅ Trim Selesai! Cek folder Movies/EditingVideo");
+                
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    updateStatus("✅ Trim Sukses! (" + (part - 1) + " file)");
+                    tvConsoleLog.setText("Tersimpan di: Movies/EditingVideo");
+                });
+
             } catch (Exception e) {
-                updateStatus("❌ Error: " + e.getMessage());
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    updateStatus("❌ Error Terjadi!");
+                    tvConsoleLog.setText(e.getMessage());
+                });
             }
-        });
+        }).start();
     }
 
+    // ==========================================
+    // 2. BUTTER LOOP PRO-LEVEL
+    // ==========================================
     private void processButterLoop(String inputPath, int targetDur) {
-        updateStatus("Memulai Butter Loop...");
-        executor.execute(() -> {
+        setLoading(true);
+        updateStatus("Mempersiapkan Filter Butter Loop...");
+
+        new Thread(() -> {
             try {
                 double dur = getVideoDuration(inputPath);
-                if (dur == 0) throw new Exception("Durasi video tidak valid");
+                if (dur == 0) throw new Exception("Durasi video nol!");
 
                 String fileName = new File(inputPath).getName();
                 String tempUnit = privateDir + "/temp_unit_" + fileName;
                 String finalPrivateOutput = privateDir + "/smooth_" + fileName;
 
-                runOnUiThread(() -> tvStatus.setText("1/2: Menyatukan frame reverse..."));
+                runOnUiThread(() -> updateStatus("Tahap 1: Membangun efek maju-mundur (Reverse)..."));
 
                 String filterComplex = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
-                String cmdUnit = String.format("-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v libx264 -preset ultrafast -crf 18 \"%s\"",
-                        inputPath, filterComplex, tempUnit);
-                FFmpegKit.execute(cmdUnit);
+                
+                String[] cmdUnit = new String[]{
+                        "-y", "-i", inputPath,
+                        "-filter_complex", filterComplex,
+                        "-map", "[out]", "-an", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+                        tempUnit
+                };
 
-                runOnUiThread(() -> tvStatus.setText("2/2: Looping sampai " + targetDur + " detik..."));
+                com.arthenica.ffmpegkit.FFmpegSession session1 = FFmpegKit.executeWithArguments(cmdUnit);
+                if (!ReturnCode.isSuccess(session1.getReturnCode())) {
+                    throw new Exception("Gagal di Tahap 1: " + session1.getFailStackTrace());
+                }
+
+                runOnUiThread(() -> updateStatus("Tahap 2: Looping sampai durasi " + targetDur + " detik..."));
 
                 double unitDur = dur * 2;
                 int numLoops = (int) (targetDur / unitDur) + 1;
 
-                String cmdFinal = String.format("-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"",
-                        numLoops, tempUnit, targetDur, finalPrivateOutput);
-                FFmpegKit.execute(cmdFinal);
+                String[] cmdFinal = new String[]{
+                        "-y", "-stream_loop", String.valueOf(numLoops),
+                        "-i", tempUnit,
+                        "-c", "copy", "-t", String.valueOf(targetDur),
+                        finalPrivateOutput
+                };
 
+                com.arthenica.ffmpegkit.FFmpegSession session2 = FFmpegKit.executeWithArguments(cmdFinal);
+                if (!ReturnCode.isSuccess(session2.getReturnCode())) {
+                    throw new Exception("Gagal di Tahap 2: " + session2.getFailStackTrace());
+                }
+
+                // Bersihkan temp file
                 new File(tempUnit).delete();
+                // Pindah hasil
                 moveToPublicFolder(finalPrivateOutput, "smooth_" + fileName);
 
-                updateStatus("✅ Loop Selesai! Cek folder Movies/EditingVideo");
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    updateStatus("✅ Butter Loop Sukses!");
+                    tvConsoleLog.setText("Tersimpan di: Movies/EditingVideo");
+                });
+
             } catch (Exception e) {
-                updateStatus("❌ Error: " + e.getMessage());
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    updateStatus("❌ Error Looping!");
+                    tvConsoleLog.setText(e.getMessage());
+                });
             }
-        });
+        }).start();
     }
 
+    // ==========================================
+    // UTILITIES
+    // ==========================================
     private double getVideoDuration(String path) {
         MediaInformationSession session = FFprobeKit.getMediaInformation(path);
         if (session.getMediaInformation() != null && session.getMediaInformation().getDuration() != null) {
@@ -173,9 +258,9 @@ public class MainActivity extends AppCompatActivity {
             while ((len = in.read(buf)) > 0) {
                 out.write(buf, 0, len);
             }
-            source.delete();
+            source.delete(); // Wajib dihapus agar storage private aplikasi gak bengkak
         } catch (Exception e) {
-            Log.e("MoveFile", "Gagal mindahin file: " + e.getMessage());
+            Log.e("MoveFile", "Gagal copy: " + e.getMessage());
         }
     }
 
@@ -195,6 +280,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateStatus(String msg) {
-        runOnUiThread(() -> tvStatus.setText(msg));
+        tvStatus.setText(msg);
+        tvConsoleLog.setText(""); // Reset log error
+    }
+
+    private void setLoading(boolean isLoading) {
+        progressBar.setVisibility(isLoading ? View.VISIBLE : View.GONE);
+        btnTrim.setEnabled(!isLoading);
+        btnLoop.setEnabled(!isLoading);
+        btnSelectVideo.setEnabled(!isLoading);
+    }
+    
+    private void showToast(String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }
