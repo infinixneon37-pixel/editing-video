@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.View; // <--- INI YANG KURANG (WAJIB ADA)
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import com.arthenica.ffmpegkit.*;
