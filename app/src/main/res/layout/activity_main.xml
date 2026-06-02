@@ -4,74 +4,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F8FAFC"
-    android:fillViewport="true">
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Video Editor Pro"
-            android:textSize="28sp"
-            android:textStyle="bold"
-            android:textColor="#0F172A"
-            android:gravity="center"
-            android:layout_marginBottom="24dp"/>
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" 
+                  android:text="Video Engine Pro" android:textSize="28sp" android:textStyle="bold" 
+                  android:gravity="center" android:layout_marginBottom="24dp"/>
 
-        <Button
-            android:id="@+id/btnSelectVideo"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSelect"
             android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:text="PILIH VIDEO" />
-
-        <TextView
-            android:id="@+id/tvSelectedFile"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="24dp"
-            android:text="Belum ada video dipilih"
-            android:textAlignment="center"
-            android:textSize="12sp" />
+            android:layout_height="64dp"
+            android:text="PILIH VIDEO"
+            app:icon="@android:drawable/ic_menu_gallery" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:hint="Durasi Potong (detik)"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/etTrimSegment"
+                android:id="@+id/etTrim"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="numberDecimal"/>
         </com.google.android.material.textfield.TextInputLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_marginTop="16dp">
-            <Button android:id="@+id/btnTrimWithAudio" android:layout_width="0dp" android:layout_height="60dp" android:layout_weight="1" android:text="TRIM AUDIO"/>
-            <Button android:id="@+id/btnTrimNoAudio" android:layout_width="0dp" android:layout_height="60dp" android:layout_weight="1" android:layout_marginStart="8dp" android:text="TRIM MUTE"/>
-        </LinearLayout>
-
-        <EditText
-            android:id="@+id/etLoopDuration"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Target Durasi Loop (detik)"
-            android:inputType="number"/>
-
-        <Button android:id="@+id/btnLoop" android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="8dp" android:text="BUTTER LOOP" android:backgroundTint="#F59E0B"/>
-        <Button android:id="@+id/btnMerge" android:layout_width="match_parent" android:layout_height="60dp" android:layout_marginTop="8dp" android:text="GABUNGKAN VIDEO" android:backgroundTint="#8B5CF6"/>
+        <Button android:id="@+id/btnTrim" android:layout_width="match_parent" android:layout_height="60dp" android:text="TRIM VIDEO" android:layout_marginTop="8dp"/>
+        <Button android:id="@+id/btnLoop" android:layout_width="match_parent" android:layout_height="60dp" android:text="BUTTER LOOP" android:layout_marginTop="8dp"/>
+        <Button android:id="@+id/btnMerge" android:layout_width="match_parent" android:layout_height="60dp" android:text="MERGE VIDEO" android:layout_marginTop="8dp"/>
 
         <ProgressBar android:id="@+id/progressBar" android:layout_width="match_parent" android:layout_height="wrap_content" android:visibility="gone" style="?android:attr/progressBarStyleHorizontal"/>
-        <TextView android:id="@+id/tvStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:textAlignment="center" android:layout_marginTop="16dp"/>
+        <TextView android:id="@+id/tvStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center" android:layout_marginTop="20dp"/>
         <LinearLayout android:id="@+id/listContainer" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp"/>
     </LinearLayout>
 </ScrollView>
