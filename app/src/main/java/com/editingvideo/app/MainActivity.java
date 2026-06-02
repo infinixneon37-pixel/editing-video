@@ -18,6 +18,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.arthenica.ffmpegkit.FFmpegKit;
+import com.arthenica.ffmpegkit.FFmpegSession;
 import com.arthenica.ffmpegkit.FFprobeKit;
 import com.arthenica.ffmpegkit.MediaInformationSession;
 import com.arthenica.ffmpegkit.ReturnCode;
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     setLoading(false);
                     tvSelectedFile.setText("File Siap: " + new File(selectedVideoPath).getName());
-                    tvSelectedFile.setTextColor(0xFF10B981); // Hijau Emerald
+                    tvSelectedFile.setTextColor(Color.parseColor("#10B981")); // Hijau Emerald
                     updateStatus("Standby. Video siap diproses!");
                 });
             }).start();
@@ -121,13 +122,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // ==========================================
-    // 1. TRIM PROCESS (PRO LOGIC)
+    // 1. TRIM PROCESS
     // ==========================================
     private void processTrim(boolean keepAudio) {
         double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
         setLoading(true);
         updateStatus("Menganalisa durasi asli...");
-        listContainer.removeAllViews(); // Bersihkan list sebelumnya
+        listContainer.removeAllViews(); 
 
         new Thread(() -> {
             try {
@@ -142,29 +143,26 @@ public class MainActivity extends AppCompatActivity {
                     final int currentPart = part;
                     runOnUiThread(() -> updateStatus("✂️ Mengekstrak Part " + currentPart + "..."));
 
-                    String outName = fileName + "_part" + String.format("%03d", part) + ".mp4";
+                    String outName = fileName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                     String outPrivatePath = privateDir + "/" + outName;
 
                     String startStr = String.format(Locale.US, "%.3f", currentStart);
                     String durStr = String.format(Locale.US, "%.3f", d_segment);
 
-                    // LOGIC PRO: Mengganti encoder agar tembus semua library AAR FFmpeg
-                    // -c:v mpeg4 -q:v 3 (Video kualitas tinggi tanpa dependensi x264)
                     String audioCmd = keepAudio ? "-c:a aac -b:a 128k" : "-an";
                     
                     String cmd = String.format(Locale.US, 
                             "-y -ss %s -t %s -i \"%s\" -c:v mpeg4 -q:v 3 %s \"%s\"",
                             startStr, durStr, selectedVideoPath, audioCmd, outPrivatePath);
 
-                    com.arthenica.ffmpegkit.FFmpegSession session = FFmpegKit.execute(cmd);
+                    FFmpegSession session = FFmpegKit.execute(cmd);
 
                     if (ReturnCode.isSuccess(session.getReturnCode())) {
                         moveToPublicFolder(outPrivatePath, outName);
-                        // Tambahkan ke UI List Daftar Hasil
                         runOnUiThread(() -> addToListResult("✅ " + outName));
                     } else {
-                        // MENGAMBIL LOG ASLI FFMPEG (Deep Reasoning Solution)
-                        String realError = session.getOutput(); 
+                        // Menggunakan getAllLogsAsString agar dipastikan bisa dicompile
+                        String realError = session.getLogsAsString(); 
                         throw new Exception("Gagal Part " + part + "\nFFmpeg Log: " + realError);
                     }
 
@@ -181,10 +179,11 @@ public class MainActivity extends AppCompatActivity {
                 });
 
             } catch (Exception e) {
+                final String errMsg = e.getMessage() != null ? e.getMessage() : "Unknown Error";
                 runOnUiThread(() -> {
                     setLoading(false);
                     updateStatus("❌ Error Terjadi!");
-                    tvConsoleLog.setText(e.getMessage());
+                    tvConsoleLog.setText(errMsg);
                 });
             }
         }).start();
@@ -212,12 +211,12 @@ public class MainActivity extends AppCompatActivity {
                 String filterComplex = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
                 
                 String cmdUnit = String.format(Locale.US,
-                        "-y -i \"%s\" -filter_complex \"%s\" -map \"[out]\" -an -c:v mpeg4 -q:v 3 \"%s\"",
+                        "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v mpeg4 -q:v 3 \"%s\"",
                         selectedVideoPath, filterComplex, tempUnit);
 
-                com.arthenica.ffmpegkit.FFmpegSession session1 = FFmpegKit.execute(cmdUnit);
+                FFmpegSession session1 = FFmpegKit.execute(cmdUnit);
                 if (!ReturnCode.isSuccess(session1.getReturnCode())) {
-                    throw new Exception("Gagal Tahap 1: " + session1.getOutput());
+                    throw new Exception("Gagal Tahap 1: " + session1.getLogsAsString());
                 }
 
                 runOnUiThread(() -> updateStatus("Tahap 2: Melipatgandakan loop..."));
@@ -229,9 +228,9 @@ public class MainActivity extends AppCompatActivity {
                         "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"",
                         numLoops, tempUnit, targetDur, finalPrivateOutput);
 
-                com.arthenica.ffmpegkit.FFmpegSession session2 = FFmpegKit.execute(cmdFinal);
+                FFmpegSession session2 = FFmpegKit.execute(cmdFinal);
                 if (!ReturnCode.isSuccess(session2.getReturnCode())) {
-                    throw new Exception("Gagal Tahap 2: " + session2.getOutput());
+                    throw new Exception("Gagal Tahap 2: " + session2.getLogsAsString());
                 }
 
                 new File(tempUnit).delete();
@@ -246,10 +245,11 @@ public class MainActivity extends AppCompatActivity {
                 });
 
             } catch (Exception e) {
+                final String errMsg = e.getMessage() != null ? e.getMessage() : "Unknown Error";
                 runOnUiThread(() -> {
                     setLoading(false);
                     updateStatus("❌ Error Looping!");
-                    tvConsoleLog.setText(e.getMessage());
+                    tvConsoleLog.setText(errMsg);
                 });
             }
         }).start();
