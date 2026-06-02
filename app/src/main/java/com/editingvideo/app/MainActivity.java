@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.view.View;
 import android.widget.*;
 import androidx.appcompat.app.AppCompatActivity;
 import com.arthenica.ffmpegkit.*;
@@ -49,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void processTrim() {
-        if (selectedPaths.isEmpty() || etTrim.getText().toString().isEmpty()) return;
+        if (selectedPaths.isEmpty()) return;
         setLoading(true);
         new Thread(() -> {
             String path = selectedPaths.get(0);
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             outDir.mkdirs();
             String cmd = String.format("-y -i \"%s\" -c copy -map 0 \"%s/part_%%03d.mp4\"", path, outDir.getAbsolutePath());
             FFmpegKit.execute(cmd);
-            finishTask("Trim Selesai!");
+            finishTask("Trim Berhasil!");
         }).start();
     }
 
@@ -70,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
             String filter = "[0:v]reverse[r];[0:v][r]concat=n=2:v=1:a=1[out]";
             String cmd = String.format("-y -i \"%s\" -filter_complex \"%s\" -map [out] -c copy \"%s\"", path, filter, out);
             FFmpegKit.execute(cmd);
-            finishTask("Loop Selesai!");
+            finishTask("Loop Berhasil!");
         }).start();
     }
 
@@ -100,8 +99,8 @@ public class MainActivity extends AppCompatActivity {
         if (r == 101 && c == RESULT_OK && data != null) {
             selectedPaths.clear();
             if (data.getClipData() != null) {
-                ClipData cd = data.getClipData();
-                for (int i = 0; i < cd.getItemCount(); i++) selectedPaths.add(copyUri(cd.getItemAt(i).getUri()));
+                for (int i = 0; i < data.getClipData().getItemCount(); i++) 
+                    selectedPaths.add(copyUri(data.getClipData().getItemAt(i).getUri()));
             } else if (data.getData() != null) selectedPaths.add(copyUri(data.getData()));
             tvSelected.setText("Dipilih: " + selectedPaths.size() + " video");
         }

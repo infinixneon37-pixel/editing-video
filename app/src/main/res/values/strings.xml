@@ -1,5 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <resources>
-    <string name="app_name">Editing Video</string>
+    <string name="app_name">Video Engine Pro</string>
+    <string name="btn_select">PILIH VIDEO</string>
+    <string name="btn_trim">TRIM VIDEO</string>
+    <string name="btn_loop">BUTTER LOOP</string>
+    <string name="btn_merge">MERGE VIDEO</string>
+    <string name="trim_hint">Durasi Potong (detik)</string>
 </resources>
