@@ -192,41 +192,35 @@ public class MainActivity extends AppCompatActivity {
             try {
                 double dur = getVideoDuration(targetVideo);
                 String finalOut = privateDir + "/" + finalName;
-                String cmd;
 
                 if (modeId == R.id.rbLoopNormal) {
-                    // Mode 1: Normal A-B Loop (Stream Copy, Hemat CPU)
+                    // Mode 1: Normal A-B Loop (Stream Copy)
                     int numLoops = (int) (targetDur / dur) + 1;
-                    cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, finalOut);
+                    String cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, finalOut);
+                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmd).getReturnCode())) throw new Exception("Gagal mengeksekusi Stream Loop.");
                     
                 } else {
-                    // Mode 2 & 3: Perlu Filter Complex Reverse
+                    // Mode 2 & 3: Filter Complex Reverse
                     String tempUnit = privateDir + "/temp_unit.mp4";
                     String filter;
+                    String cmdFilter;
                     
                     if (modeId == R.id.rbLoopTwerk) {
-                        // Twerk Loop: A -> B -> rev(B) -> rev(A). Audio ikut di reverse agar sinkron!
                         filter = "[0:v]reverse,setpts=PTS-STARTPTS[v2];[0:a]areverse,asetpts=PTS-STARTPTS[a2];[0:v][0:a][v2][a2]concat=n=2:v=1:a=1[outv][outa]";
-                        cmd = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v libx264 -preset superfast -c:a aac \"%s\"", targetVideo, filter, tempUnit);
+                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v libx264 -preset superfast -c:a aac \"%s\"", targetVideo, filter, tempUnit);
                     } else {
-                        // Boomerang: Maju Mundur No Audio
                         filter = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
-                        cmd = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v libx264 -preset superfast \"%s\"", targetVideo, filter, tempUnit);
+                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v libx264 -preset superfast \"%s\"", targetVideo, filter, tempUnit);
                     }
 
-                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmd).getReturnCode())) throw new Exception("Gagal membuat unit reverse.");
+                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmdFilter).getReturnCode())) throw new Exception("Gagal membuat unit reverse filter.");
 
                     double unitDur = dur * 2;
                     int numLoops = (int) (targetDur / unitDur) + 1;
                     String cmdLoop = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, tempUnit, targetDur, finalOut);
                     
                     if (!ReturnCode.isSuccess(FFmpegKit.execute(cmdLoop).getReturnCode())) throw new Exception("Gagal mengeksekusi iterasi loop.");
-                    new File(tempUnit).delete();
-                }
-                
-                // Jika direct stream loop Normal
-                if (modeId == R.id.rbLoopNormal) {
-                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmd).getReturnCode())) throw new Exception("Gagal Stream Loop.");
+                    new File(tempUnit).delete(); // Bersihkan file temp
                 }
 
                 moveToPublicFolder(finalOut, outDir, finalName);
@@ -256,7 +250,6 @@ public class MainActivity extends AppCompatActivity {
                 writer.flush(); writer.close();
 
                 // Concat demuxer (Sangat cepat, cocok untuk file ts, mp4, flv)
-                // Jika format codec beda drastis, hilangkan -c copy dan re-encode (c:v libx264)
                 String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), finalOut);
                 
                 FFmpegSession session = FFmpegKit.execute(cmd);
@@ -264,9 +257,6 @@ public class MainActivity extends AppCompatActivity {
                     moveToPublicFolder(finalOut, outDir, finalName);
                     
                     // --- ATURAN HAPUS VIDEO ASLI (HANYA MERGE) ---
-                    // Note: Di Android 13, menghapus file URI sumber langsung di luar scope
-                    // membutuhkan izin khusus (RecoverableSecurityException). 
-                    // Solusi: Kita hapus file internal copy-nya untuk menghemat space!
                     for (String path : selectedPaths) {
                         new File(path).delete(); 
                     }
@@ -327,6 +317,7 @@ public class MainActivity extends AppCompatActivity {
         TextView tv = new TextView(this); tv.setText(text); tv.setTextColor(Color.parseColor("#00E676"));
         listContainer.addView(tv);
     }
+    
     private void updateStatus(String msg) { tvStatus.setText(msg); tvConsoleLog.setText(""); }
     private void finishTask(String msg) { runOnUiThread(() -> { setLoading(false); updateStatus(msg); }); }
     private void finishError(String m) { runOnUiThread(() -> { setLoading(false); updateStatus("❌ Error"); tvConsoleLog.setText(m); }); }
