@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
 
-        // Setup Main Folders (Termasuk folder Convert baru)
         String[] subDirs = {"/Trim", "/Loop", "/Merge", "/Convert"};
         for (String sub : subDirs) {
             File d = new File(publicBaseDir + sub);
@@ -168,8 +167,8 @@ public class MainActivity extends AppCompatActivity {
                         String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                         String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
 
-                        // Parameter -pix_fmt yuv420p ditambahkan agar universal support untuk file HDR/AV1
-                        String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
+                        // PENAMBAHAN ANALYZEDURATION & PROBESIZE UNTUK MENGATASI ERROR AV1/HEVC
+                        String cmd = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
                                 currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
 
                         FFmpegSession session = FFmpegKit.execute(cmd);
@@ -208,7 +207,7 @@ public class MainActivity extends AppCompatActivity {
 
                     if (modeId == R.id.rbLoopNormal) {
                         int numLoops = (int) (targetDur / dur) + 1;
-                        String cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, safeOutPath);
+                        String cmd = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, safeOutPath);
                         FFmpegSession session = FFmpegKit.execute(cmd);
                         if (!ReturnCode.isSuccess(session.getReturnCode())) throwFFmpegError(session);
 
@@ -218,14 +217,13 @@ public class MainActivity extends AppCompatActivity {
                         String cmdFilter;
 
                         if (modeId == R.id.rbLoopTwerk) {
-                            // Twerk: Split video & audio, eksekusi maju dan mundur lalu gabung agar sempurna tanpa glitch.
                             filter = "[0:v]split=2[v1][v_rev];[v1]setpts=PTS-STARTPTS[v_fwd];[v_rev]reverse,setpts=PTS-STARTPTS[v2];[v_fwd][v2]concat=n=2:v=1:a=0[outv];[0:a]asplit=2[a1][a_rev];[a1]asetpts=PTS-STARTPTS[a_fwd];[a_rev]areverse,asetpts=PTS-STARTPTS[a2];[a_fwd][a2]concat=n=2:v=0:a=1[outa]";
                         } else {
-                            // Boomerang: Split stream. Video maju+mundur. Audio diduplikasi maju+maju (berjalan normal 2x).
                             filter = "[0:v]split=2[v1][v_rev];[v1]setpts=PTS-STARTPTS[v_fwd];[v_rev]reverse,setpts=PTS-STARTPTS[v2];[v_fwd][v2]concat=n=2:v=1:a=0[outv];[0:a]asplit=2[a1][a2];[a1]asetpts=PTS-STARTPTS[a_fwd];[a2]asetpts=PTS-STARTPTS[a_dup];[a_fwd][a_dup]concat=n=2:v=0:a=1[outa]";
                         }
                         
-                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac -pix_fmt yuv420p \"%s\"", targetVideo, filter, tempUnit);
+                        // PENAMBAHAN ANALYZEDURATION & PROBESIZE
+                        cmdFilter = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac -pix_fmt yuv420p \"%s\"", targetVideo, filter, tempUnit);
 
                         FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
                         if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
@@ -267,7 +265,6 @@ public class MainActivity extends AppCompatActivity {
                 }
                 writer.flush(); writer.close();
 
-                // Concat demuxer (-c copy). Sangat cepat tapi format video harus 100% sama!
                 String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), safeOutPath);
 
                 FFmpegSession session = FFmpegKit.execute(cmd);
@@ -303,8 +300,8 @@ public class MainActivity extends AppCompatActivity {
 
                     String safeOutPath = privateDir + "/out_convert_" + System.currentTimeMillis() + "_" + i + ".mp4";
 
-                    // Transcoding aman: Paksa format pixel dan audio/video codec ke standar universal.
-                    String cmd = String.format(Locale.US, "-y -i \"%s\" -c:v mpeg4 -q:v 3 -c:a aac -b:a 128k -pix_fmt yuv420p \"%s\"", targetVideo, safeOutPath);
+                    // PENAMBAHAN ANALYZEDURATION & PROBESIZE
+                    String cmd = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -i \"%s\" -c:v mpeg4 -q:v 3 -c:a aac -b:a 128k -pix_fmt yuv420p \"%s\"", targetVideo, safeOutPath);
 
                     FFmpegSession session = FFmpegKit.execute(cmd);
                     if (ReturnCode.isSuccess(session.getReturnCode())) {
@@ -351,6 +348,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private double getVideoDuration(String path) {
+        // Probe juga kadang butuh waktu lebih untuk AV1
         MediaInformationSession s = FFprobeKit.getMediaInformation(path);
         return (s.getMediaInformation() != null) ? Double.parseDouble(s.getMediaInformation().getDuration()) : 0;
     }
