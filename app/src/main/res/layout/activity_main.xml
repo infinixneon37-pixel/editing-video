@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F0F2F5"
+    android:background="#121212"
     android:fillViewport="true">
 
     <LinearLayout
@@ -18,7 +18,7 @@
             android:text="Video Editor Pro"
             android:textSize="26sp"
             android:textStyle="bold"
-            android:textColor="#1E293B"
+            android:textColor="#FFFFFF"
             android:gravity="center"
             android:layout_marginTop="8dp" />
 
@@ -27,7 +27,7 @@
             android:layout_height="wrap_content"
             android:text="FFmpeg-Kit Engine"
             android:textSize="14sp"
-            android:textColor="#64748B"
+            android:textColor="#00E676"
             android:gravity="center"
             android:layout_marginBottom="24dp" />
 
@@ -36,31 +36,45 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
-
+            app:cardBackgroundColor="#1E1E1E">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="#FFFFFF">
-
-                <Button
-                    android:id="@+id/btnSelectVideo"
+                android:padding="16dp">
+                
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:text="📁 PILIH VIDEO DARI GALERI"
-                    android:textStyle="bold"
-                    android:backgroundTint="#3B82F6"
-                    android:textColor="#FFFFFF" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2">
+                    <Button
+                        android:id="@+id/btnSelectVideo"
+                        android:layout_width="0dp"
+                        android:layout_height="55dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="📁 PILIH\nVIDEO (1)"
+                        android:textSize="12sp"
+                        android:backgroundTint="#2979FF" />
+                    <Button
+                        android:id="@+id/btnSelectMultiVideo"
+                        android:layout_width="0dp"
+                        android:layout_height="55dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="📁 PILIH\nMULTI (MERGE)"
+                        android:textSize="12sp"
+                        android:backgroundTint="#651FFF" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/tvSelectedFile"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="Belum ada video dipilih"
-                    android:textColor="#EF4444"
+                    android:text="[ Kosong ]"
+                    android:textColor="#FF1744"
                     android:textStyle="italic"
                     android:gravity="center"/>
             </LinearLayout>
@@ -71,59 +85,52 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
-
+            app:cardBackgroundColor="#1E1E1E">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="#FFFFFF">
-
+                android:padding="16dp">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="✂️ Mode Potong (Trim)"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333"
+                    android:textColor="#FFFFFF"
                     android:layout_marginBottom="12dp"/>
-
                 <EditText
                     android:id="@+id/etTrimSegment"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
-                    android:hint="Durasi per potong (detik, misal: 1)"
+                    android:hint="Durasi per potong (detik)"
+                    android:textColorHint="#757575"
+                    android:textColor="#FFFFFF"
                     android:inputType="numberDecimal"
-                    android:background="#F8FAFC"
+                    android:background="#2C2C2C"
                     android:paddingHorizontal="16dp"
                     android:layout_marginBottom="12dp"/>
-
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:weightSum="2">
-
                     <Button
                         android:id="@+id/btnTrimWithAudio"
                         android:layout_width="0dp"
                         android:layout_height="55dp"
                         android:layout_weight="1"
                         android:layout_marginEnd="4dp"
-                        android:text="TRIM\n(AUDIO ON)"
-                        android:textSize="12sp"
-                        android:backgroundTint="#10B981" />
-
+                        android:text="TRIM (AUDIO)"
+                        android:backgroundTint="#00B0FF" />
                     <Button
                         android:id="@+id/btnTrimNoAudio"
                         android:layout_width="0dp"
                         android:layout_height="55dp"
                         android:layout_weight="1"
                         android:layout_marginStart="4dp"
-                        android:text="TRIM\n(NO AUDIO)"
-                        android:textSize="12sp"
-                        android:backgroundTint="#059669" />
+                        android:text="TRIM (NO AUDIO)"
+                        android:backgroundTint="#0091EA" />
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -133,40 +140,92 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
-
+            app:cardBackgroundColor="#1E1E1E">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="#FFFFFF">
-
+                android:padding="16dp">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="🧈 Mode Butter Loop"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:textColor="#333333"
+                    android:textColor="#FFFFFF"
                     android:layout_marginBottom="12dp"/>
+                
+                <RadioGroup
+                    android:id="@+id/rgLoopMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp">
+                    <RadioButton
+                        android:id="@+id/rbLoopNormal"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Loop A-B (Normal + Audio)"
+                        android:textColor="#E0E0E0"
+                        android:checked="true"/>
+                    <RadioButton
+                        android:id="@+id/rbLoopTwerk"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Twerk Loop (Maju Mundur + Audio)"
+                        android:textColor="#E0E0E0"/>
+                    <RadioButton
+                        android:id="@+id/rbLoopBoomerang"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Boomerang (Maju Mundur, No Audio)"
+                        android:textColor="#E0E0E0"/>
+                </RadioGroup>
 
                 <EditText
                     android:id="@+id/etLoopDuration"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"
                     android:hint="Target Durasi Loop (misal: 15)"
+                    android:textColorHint="#757575"
+                    android:textColor="#FFFFFF"
                     android:inputType="number"
-                    android:background="#F8FAFC"
+                    android:background="#2C2C2C"
                     android:paddingHorizontal="16dp"
                     android:layout_marginBottom="12dp"/>
-
                 <Button
                     android:id="@+id/btnLoop"
                     android:layout_width="match_parent"
                     android:layout_height="55dp"
-                    android:text="EKSEKUSI BUTTER LOOP"
-                    android:backgroundTint="#F59E0B" />
+                    android:text="EKSEKUSI LOOP"
+                    android:backgroundTint="#FF9100" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#1E1E1E">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="🔗 Gabung Video (Merge & Remux)"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="12dp"/>
+                <Button
+                    android:id="@+id/btnMerge"
+                    android:layout_width="match_parent"
+                    android:layout_height="55dp"
+                    android:text="GABUNG & REMUX KE MP4"
+                    android:backgroundTint="#00C853" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -184,7 +243,7 @@
             android:layout_marginTop="8dp"
             android:text="Status: Standby"
             android:gravity="center"
-            android:textColor="#3B82F6"
+            android:textColor="#00E676"
             android:textStyle="bold" />
 
         <androidx.cardview.widget.CardView
@@ -193,43 +252,35 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="32dp"
             app:cardCornerRadius="12dp"
-            app:cardElevation="2dp">
-
+            app:cardBackgroundColor="#000000">
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp"
-                android:background="#1E293B">
-
+                android:padding="16dp">
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="📋 Daftar Hasil (Tersimpan di Movies)"
+                    android:text="[ root@localhost ~ ]# Output:"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    android:textColor="#FFFFFF"
+                    android:textColor="#00E676"
                     android:layout_marginBottom="12dp"/>
-
                 <LinearLayout
                     android:id="@+id/listContainer"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    
-                    </LinearLayout>
-
+                    android:orientation="vertical"/>
                 <TextView
                     android:id="@+id/tvConsoleLog"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="Menunggu perintah..."
-                    android:textColor="#94A3B8"
+                    android:textColor="#757575"
                     android:textSize="10sp"
                     android:fontFamily="monospace" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
-
     </LinearLayout>
 </ScrollView>
