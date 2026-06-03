@@ -215,7 +215,7 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🔗 Gabung Video (Merge & Remux)"
+                    android:text="🔗 Gabung Video (Merge &amp; Remux)"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
@@ -224,7 +224,7 @@
                     android:id="@+id/btnMerge"
                     android:layout_width="match_parent"
                     android:layout_height="55dp"
-                    android:text="GABUNG & REMUX KE MP4"
+                    android:text="GABUNG &amp; REMUX KE MP4"
                     android:backgroundTint="#00C853" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
