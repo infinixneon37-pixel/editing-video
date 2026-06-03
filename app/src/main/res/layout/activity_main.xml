@@ -173,13 +173,13 @@
                         android:id="@+id/rbLoopTwerk"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Twerk Loop (Maju Mundur + Audio)"
+                        android:text="Twerk Loop (Video &amp; Audio Maju Mundur)"
                         android:textColor="#E0E0E0"/>
                     <RadioButton
                         android:id="@+id/rbLoopBoomerang"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Boomerang (Maju Mundur, No Audio)"
+                        android:text="Boomerang (Video Memantul, Audio Maju Normal)"
                         android:textColor="#E0E0E0"/>
                 </RadioGroup>
 
