@@ -71,9 +71,7 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         listContainer = findViewById(R.id.listContainer);
 
-        // Path internal tempat FFmpeg bekerja (bebas Scoped Storage)
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
-        // Path eksternal tempat hasil akhir ditaruh
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
 
         // Setup Main Folders
@@ -100,9 +98,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean checkInput(EditText et, boolean isMulti) {
-        if (selectedPaths.isEmpty()) { showToast("Pilih video dulu, Bang!"); return false; }
-        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video untuk digabung!"); return false; }
-        if (et != null && et.getText().toString().isEmpty()) { showToast("Isi durasi dulu!"); return false; }
+        if (selectedPaths.isEmpty()) { showToast("Pilih video terlebih dahulu."); return false; }
+        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video diperlukan untuk digabung."); return false; }
+        if (et != null && et.getText().toString().isEmpty()) { showToast("Parameter durasi belum diisi."); return false; }
         return true;
     }
 
@@ -112,6 +110,8 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
             new Thread(() -> {
+                // Clear cache dari eksekusi sebelumnya
+                for (String path : selectedPaths) { new File(path).delete(); }
                 selectedPaths.clear(); originalNames.clear();
                 
                 if (data.getClipData() != null) {
@@ -125,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     setLoading(false);
-                    tvSelectedFile.setText(selectedPaths.size() + " File Siap: \n" + String.join("\n", originalNames));
+                    tvSelectedFile.setText(selectedPaths.size() + " File Tersedia: \n" + String.join("\n", originalNames));
                     tvSelectedFile.setTextColor(Color.parseColor("#00E676"));
-                    updateStatus("Standby. Video siap diproses!");
+                    updateStatus("Standby. Siap diproses.");
                 });
             }).start();
         }
@@ -135,99 +135,111 @@ public class MainActivity extends AppCompatActivity {
 
     private void processUriInput(Uri uri) {
         String realName = getFileName(uri);
-        String safeName = realName.replaceAll("[^a-zA-Z0-9.-]", "_"); 
+        realName = realName.replace("\"", "").replace("'", "");
         originalNames.add(realName);
-        selectedPaths.add(copyUriToPrivate(uri, safeName));
+        
+        String safeInternalName = "tmp_" + System.currentTimeMillis() + "_" + selectedPaths.size() + ".mp4";
+        selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
 
-    // --- FITUR TRIM ---
+    // --- FITUR TRIM (BATCH PROCESSING) ---
     private void processTrim(boolean keepAudio) {
         double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
-        String targetVideo = selectedPaths.get(0);
-        String baseName = originalNames.get(0).replaceAll("[.][^.]+$", "");
         String outDir = publicBaseDir + "/Trim";
 
-        setLoading(true); updateStatus("Menganalisa durasi..."); listContainer.removeAllViews();
+        setLoading(true); listContainer.removeAllViews();
 
         new Thread(() -> {
             try {
-                double totalDur = getVideoDuration(targetVideo);
-                double currentStart = 0.0;
-                int part = 1;
-
-                while (currentStart < totalDur) {
-                    final int currentPart = part;
-                    runOnUiThread(() -> updateStatus("✂️ Mengekstrak Part " + currentPart + "..."));
+                for (int i = 0; i < selectedPaths.size(); i++) {
+                    String targetVideo = selectedPaths.get(i);
+                    String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
                     
-                    String outName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
-                    String outPath = privateDir + "/" + outName;
+                    double totalDur = getVideoDuration(targetVideo);
+                    double currentStart = 0.0;
+                    int part = 1;
 
-                    // Menggunakan codec mpeg4 bawaan Anda agar aman dari error missing encoder
-                    String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s \"%s\"",
-                            currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", outPath);
+                    while (currentStart < totalDur) {
+                        final int currentPart = part;
+                        final int fileIndex = i + 1;
+                        runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Part " + currentPart + "..."));
+                        
+                        String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
+                        String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
 
-                    FFmpegSession session = FFmpegKit.execute(cmd);
-                    if (ReturnCode.isSuccess(session.getReturnCode())) {
-                        moveToPublicFolder(outPath, outDir, outName);
-                        runOnUiThread(() -> addToListResult("✅ " + outName));
-                    } else { throwFFmpegError(session); }
-                    
-                    currentStart += d_segment; part++;
+                        String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s \"%s\"",
+                                currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
+
+                        FFmpegSession session = FFmpegKit.execute(cmd);
+                        if (ReturnCode.isSuccess(session.getReturnCode())) {
+                            moveToPublicFolder(safeOutPath, outDir, finalOutName);
+                            runOnUiThread(() -> addToListResult("✅ " + finalOutName));
+                        } else { throwFFmpegError(session); }
+                        
+                        currentStart += d_segment; part++;
+                    }
                 }
-                finishTask("✨ Trim Selesai!");
+                finishTask("✨ Eksekusi Batch Trim Selesai!");
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
 
-    // --- FITUR LOOP (3 MODE) ---
+    // --- FITUR LOOP (BATCH PROCESSING) ---
     private void processButterLoop(int targetDur) {
-        String targetVideo = selectedPaths.get(0);
-        String finalName = "loop_" + originalNames.get(0).replaceAll("[.][^.]+$", "") + ".mp4";
         String outDir = publicBaseDir + "/Loop";
         int modeId = rgLoopMode.getCheckedRadioButtonId();
 
-        setLoading(true); updateStatus("Mengeksekusi Loop Filter..."); listContainer.removeAllViews();
+        setLoading(true); listContainer.removeAllViews();
 
         new Thread(() -> {
             try {
-                double dur = getVideoDuration(targetVideo);
-                String finalOut = privateDir + "/" + finalName;
+                for (int i = 0; i < selectedPaths.size(); i++) {
+                    String targetVideo = selectedPaths.get(i);
+                    String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
+                    String finalOutName = "loop_" + baseName + ".mp4";
+                    
+                    final int fileIndex = i + 1;
+                    runOnUiThread(() -> updateStatus("🧈 [File " + fileIndex + "/" + selectedPaths.size() + "] Proses Loop..."));
 
-                if (modeId == R.id.rbLoopNormal) {
-                    int numLoops = (int) (targetDur / dur) + 1;
-                    String cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, finalOut);
-                    FFmpegSession session = FFmpegKit.execute(cmd);
-                    if (!ReturnCode.isSuccess(session.getReturnCode())) throwFFmpegError(session);
-                    
-                } else {
-                    String tempUnit = privateDir + "/temp_unit.mp4";
-                    String filter;
-                    String cmdFilter;
-                    
-                    if (modeId == R.id.rbLoopTwerk) {
-                        filter = "[0:v]reverse,setpts=PTS-STARTPTS[v2];[0:a]areverse,asetpts=PTS-STARTPTS[a2];[0:v][0:a][v2][a2]concat=n=2:v=1:a=1[outv][outa]";
-                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac \"%s\"", targetVideo, filter, tempUnit);
+                    double dur = getVideoDuration(targetVideo);
+                    String safeOutPath = privateDir + "/out_loop_" + System.currentTimeMillis() + "_" + i + ".mp4";
+
+                    if (modeId == R.id.rbLoopNormal) {
+                        int numLoops = (int) (targetDur / dur) + 1;
+                        String cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, safeOutPath);
+                        FFmpegSession session = FFmpegKit.execute(cmd);
+                        if (!ReturnCode.isSuccess(session.getReturnCode())) throwFFmpegError(session);
+                        
                     } else {
-                        filter = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
-                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v mpeg4 -q:v 3 \"%s\"", targetVideo, filter, tempUnit);
+                        String tempUnit = privateDir + "/temp_unit_" + i + ".mp4";
+                        String filter;
+                        String cmdFilter;
+                        
+                        if (modeId == R.id.rbLoopTwerk) {
+                            filter = "[0:v]reverse,setpts=PTS-STARTPTS[v2];[0:a]areverse,asetpts=PTS-STARTPTS[a2];[0:v][0:a][v2][a2]concat=n=2:v=1:a=1[outv][outa]";
+                            cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac \"%s\"", targetVideo, filter, tempUnit);
+                        } else {
+                            filter = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
+                            cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v mpeg4 -q:v 3 \"%s\"", targetVideo, filter, tempUnit);
+                        }
+
+                        FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
+                        if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
+
+                        double unitDur = dur * 2;
+                        int numLoops = (int) (targetDur / unitDur) + 1;
+                        String cmdLoop = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, tempUnit, targetDur, safeOutPath);
+                        
+                        FFmpegSession sessionLoop = FFmpegKit.execute(cmdLoop);
+                        if (!ReturnCode.isSuccess(sessionLoop.getReturnCode())) throwFFmpegError(sessionLoop);
+                        
+                        new File(tempUnit).delete(); 
                     }
 
-                    FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
-                    if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
-
-                    double unitDur = dur * 2;
-                    int numLoops = (int) (targetDur / unitDur) + 1;
-                    String cmdLoop = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, tempUnit, targetDur, finalOut);
-                    
-                    FFmpegSession sessionLoop = FFmpegKit.execute(cmdLoop);
-                    if (!ReturnCode.isSuccess(sessionLoop.getReturnCode())) throwFFmpegError(sessionLoop);
-                    
-                    new File(tempUnit).delete(); 
+                    moveToPublicFolder(safeOutPath, outDir, finalOutName);
+                    runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                 }
-
-                moveToPublicFolder(finalOut, outDir, finalName);
-                runOnUiThread(() -> addToListResult("✅ " + finalName));
-                finishTask("✨ Loop Selesai!");
+                finishTask("✨ Eksekusi Batch Loop Selesai!");
 
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
@@ -236,10 +248,11 @@ public class MainActivity extends AppCompatActivity {
     // --- FITUR GABUNG (MERGE & REMUX) ---
     private void processMerge() {
         String outDir = publicBaseDir + "/Merge";
-        String finalName = "merged_" + System.currentTimeMillis() + ".mp4";
-        String finalOut = privateDir + "/" + finalName;
+        String baseName = originalNames.get(0).replaceAll("[.][^.]+$", "");
+        String finalOutName = "merged_" + baseName + ".mp4";
+        String safeOutPath = privateDir + "/out_merge_" + System.currentTimeMillis() + ".mp4";
 
-        setLoading(true); updateStatus("Menggabungkan & Remuxing Video..."); listContainer.removeAllViews();
+        setLoading(true); updateStatus("🔗 Menggabungkan & Remuxing Video..."); listContainer.removeAllViews();
 
         new Thread(() -> {
             try {
@@ -250,19 +263,20 @@ public class MainActivity extends AppCompatActivity {
                 }
                 writer.flush(); writer.close();
 
-                String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), finalOut);
+                String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), safeOutPath);
                 
                 FFmpegSession session = FFmpegKit.execute(cmd);
                 if (ReturnCode.isSuccess(session.getReturnCode())) {
-                    moveToPublicFolder(finalOut, outDir, finalName);
+                    moveToPublicFolder(safeOutPath, outDir, finalOutName);
                     
+                    // Eksekusi penghapusan file asli khusus untuk proses Merge sesuai instruksi
                     for (String path : selectedPaths) {
                         new File(path).delete(); 
                     }
                     selectedPaths.clear(); originalNames.clear();
                     
                     runOnUiThread(() -> {
-                        addToListResult("✅ " + finalName);
+                        addToListResult("✅ " + finalOutName);
                         tvSelectedFile.setText("[ Kosong ]");
                     });
                     finishTask("✨ Merge Selesai!");
@@ -295,7 +309,7 @@ public class MainActivity extends AppCompatActivity {
             int cut = result.lastIndexOf('/');
             if (cut != -1) result = result.substring(cut + 1);
         }
-        return result != null ? result : "video_" + System.currentTimeMillis();
+        return result != null ? result : "video_" + System.currentTimeMillis() + ".mp4";
     }
 
     private String copyUriToPrivate(Uri u, String safeName) {
@@ -314,14 +328,14 @@ public class MainActivity extends AppCompatActivity {
     private void moveToPublicFolder(String srcPath, String destDir, String name) throws Exception {
         File s = new File(srcPath);
         File dir = new File(destDir);
-        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Gagal membuat folder publik: " + destDir);
+        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Gagal membuat direktori rute publik: " + destDir);
         
         File d = new File(destDir, name);
         try (InputStream in = new FileInputStream(s); OutputStream out = new FileOutputStream(d)) {
             byte[] b = new byte[4096]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l); 
-            s.delete(); // hapus master di private folder
+            s.delete(); 
         } catch (Exception e) { 
-            throw new Exception("Gagal pindah ke folder Movies! (Izin ditolak oleh Android 13). Detail: " + e.getMessage()); 
+            throw new Exception("Transfer I/O diblokir sistem Android. Detail: " + e.getMessage()); 
         }
     }
 
