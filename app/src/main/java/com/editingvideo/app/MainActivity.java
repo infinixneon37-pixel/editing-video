@@ -71,7 +71,9 @@ public class MainActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         listContainer = findViewById(R.id.listContainer);
 
+        // Path internal tempat FFmpeg bekerja (bebas Scoped Storage)
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
+        // Path eksternal tempat hasil akhir ditaruh
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
 
         // Setup Main Folders
@@ -113,14 +115,11 @@ public class MainActivity extends AppCompatActivity {
                 selectedPaths.clear(); originalNames.clear();
                 
                 if (data.getClipData() != null) {
-                    // Multi selection
                     int count = data.getClipData().getItemCount();
                     for (int i = 0; i < count; i++) {
-                        Uri uri = data.getClipData().getItemAt(i).getUri();
-                        processUriInput(uri);
+                        processUriInput(data.getClipData().getItemAt(i).getUri());
                     }
                 } else if (data.getData() != null) {
-                    // Single selection
                     processUriInput(data.getData());
                 }
 
@@ -136,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void processUriInput(Uri uri) {
         String realName = getFileName(uri);
-        String safeName = realName.replaceAll("[^a-zA-Z0-9.-]", "_"); // Cegah error spasi di ffmpeg
+        String safeName = realName.replaceAll("[^a-zA-Z0-9.-]", "_"); 
         originalNames.add(realName);
         selectedPaths.add(copyUriToPrivate(uri, safeName));
     }
@@ -163,14 +162,15 @@ public class MainActivity extends AppCompatActivity {
                     String outName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                     String outPath = privateDir + "/" + outName;
 
-                    String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v libx264 -preset ultrafast -crf 24 %s \"%s\"",
+                    // Menggunakan codec mpeg4 bawaan Anda agar aman dari error missing encoder
+                    String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s \"%s\"",
                             currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", outPath);
 
                     FFmpegSession session = FFmpegKit.execute(cmd);
                     if (ReturnCode.isSuccess(session.getReturnCode())) {
                         moveToPublicFolder(outPath, outDir, outName);
                         runOnUiThread(() -> addToListResult("✅ " + outName));
-                    } else { throw new Exception(session.getLogsAsString()); }
+                    } else { throwFFmpegError(session); }
                     
                     currentStart += d_segment; part++;
                 }
@@ -194,33 +194,35 @@ public class MainActivity extends AppCompatActivity {
                 String finalOut = privateDir + "/" + finalName;
 
                 if (modeId == R.id.rbLoopNormal) {
-                    // Mode 1: Normal A-B Loop (Stream Copy)
                     int numLoops = (int) (targetDur / dur) + 1;
                     String cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, finalOut);
-                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmd).getReturnCode())) throw new Exception("Gagal mengeksekusi Stream Loop.");
+                    FFmpegSession session = FFmpegKit.execute(cmd);
+                    if (!ReturnCode.isSuccess(session.getReturnCode())) throwFFmpegError(session);
                     
                 } else {
-                    // Mode 2 & 3: Filter Complex Reverse
                     String tempUnit = privateDir + "/temp_unit.mp4";
                     String filter;
                     String cmdFilter;
                     
                     if (modeId == R.id.rbLoopTwerk) {
                         filter = "[0:v]reverse,setpts=PTS-STARTPTS[v2];[0:a]areverse,asetpts=PTS-STARTPTS[a2];[0:v][0:a][v2][a2]concat=n=2:v=1:a=1[outv][outa]";
-                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v libx264 -preset superfast -c:a aac \"%s\"", targetVideo, filter, tempUnit);
+                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac \"%s\"", targetVideo, filter, tempUnit);
                     } else {
                         filter = "[0:v]setpts=PTS-STARTPTS[v1];[0:v]reverse,setpts=PTS-STARTPTS[v2];[v1][v2]concat=n=2:v=1:a=0,format=yuv420p[out]";
-                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v libx264 -preset superfast \"%s\"", targetVideo, filter, tempUnit);
+                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [out] -an -c:v mpeg4 -q:v 3 \"%s\"", targetVideo, filter, tempUnit);
                     }
 
-                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmdFilter).getReturnCode())) throw new Exception("Gagal membuat unit reverse filter.");
+                    FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
+                    if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
 
                     double unitDur = dur * 2;
                     int numLoops = (int) (targetDur / unitDur) + 1;
                     String cmdLoop = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, tempUnit, targetDur, finalOut);
                     
-                    if (!ReturnCode.isSuccess(FFmpegKit.execute(cmdLoop).getReturnCode())) throw new Exception("Gagal mengeksekusi iterasi loop.");
-                    new File(tempUnit).delete(); // Bersihkan file temp
+                    FFmpegSession sessionLoop = FFmpegKit.execute(cmdLoop);
+                    if (!ReturnCode.isSuccess(sessionLoop.getReturnCode())) throwFFmpegError(sessionLoop);
+                    
+                    new File(tempUnit).delete(); 
                 }
 
                 moveToPublicFolder(finalOut, outDir, finalName);
@@ -241,7 +243,6 @@ public class MainActivity extends AppCompatActivity {
 
         new Thread(() -> {
             try {
-                // Buat file list.txt untuk FFmpeg concat demuxer
                 File listFile = new File(privateDir, "list.txt");
                 FileWriter writer = new FileWriter(listFile);
                 for (String path : selectedPaths) {
@@ -249,18 +250,16 @@ public class MainActivity extends AppCompatActivity {
                 }
                 writer.flush(); writer.close();
 
-                // Concat demuxer (Sangat cepat, cocok untuk file ts, mp4, flv)
                 String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), finalOut);
                 
                 FFmpegSession session = FFmpegKit.execute(cmd);
                 if (ReturnCode.isSuccess(session.getReturnCode())) {
                     moveToPublicFolder(finalOut, outDir, finalName);
                     
-                    // --- ATURAN HAPUS VIDEO ASLI (HANYA MERGE) ---
                     for (String path : selectedPaths) {
                         new File(path).delete(); 
                     }
-                    selectedPaths.clear(); originalNames.clear(); // Bersihkan list
+                    selectedPaths.clear(); originalNames.clear();
                     
                     runOnUiThread(() -> {
                         addToListResult("✅ " + finalName);
@@ -268,13 +267,19 @@ public class MainActivity extends AppCompatActivity {
                     });
                     finishTask("✨ Merge Selesai!");
                 } else {
-                    throw new Exception(session.getLogsAsString());
+                    throwFFmpegError(session);
                 }
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
 
     // --- UTILITIES ---
+    private void throwFFmpegError(FFmpegSession session) throws Exception {
+        String log = session.getLogsAsString();
+        if (log == null || log.isEmpty()) log = "FFmpeg gagal dengan ReturnCode: " + session.getReturnCode() + ". Kemungkinan codec tidak didukung.";
+        throw new Exception(log);
+    }
+
     private String getFileName(Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
@@ -306,11 +311,18 @@ public class MainActivity extends AppCompatActivity {
         return (s.getMediaInformation() != null) ? Double.parseDouble(s.getMediaInformation().getDuration()) : 0;
     }
 
-    private void moveToPublicFolder(String srcPath, String destDir, String name) {
-        File s = new File(srcPath); File d = new File(destDir, name);
+    private void moveToPublicFolder(String srcPath, String destDir, String name) throws Exception {
+        File s = new File(srcPath);
+        File dir = new File(destDir);
+        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Gagal membuat folder publik: " + destDir);
+        
+        File d = new File(destDir, name);
         try (InputStream in = new FileInputStream(s); OutputStream out = new FileOutputStream(d)) {
-            byte[] b = new byte[4096]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l); s.delete();
-        } catch (Exception e) { Log.e("Move", e.getMessage()); }
+            byte[] b = new byte[4096]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l); 
+            s.delete(); // hapus master di private folder
+        } catch (Exception e) { 
+            throw new Exception("Gagal pindah ke folder Movies! (Izin ditolak oleh Android 13). Detail: " + e.getMessage()); 
+        }
     }
 
     private void addToListResult(String text) {
