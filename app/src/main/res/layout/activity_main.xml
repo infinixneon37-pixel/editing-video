@@ -80,6 +80,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- TV PREVIEW CARD WITH SEEKBAR -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPreview"
             android:layout_width="match_parent"
@@ -96,8 +97,8 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="📺 Preview (Untuk Cek Waktu Potong)"
-                    android:textSize="14sp"
+                    android:text="📺 Preview (Geser bar untuk cari waktu potong)"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
                     android:layout_marginBottom="8dp"/>
@@ -106,12 +107,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="200dp"
                     android:layout_gravity="center"/>
+                
+                <SeekBar
+                    android:id="@+id/seekBarPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:progressTint="#00E676"
+                    android:thumbTint="#00C853"
+                    android:paddingHorizontal="8dp"/>
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginTop="8dp">
+                    android:layout_marginTop="4dp">
                     <Button
                         android:id="@+id/btnPlayPause"
                         android:layout_width="wrap_content"
@@ -132,6 +143,7 @@
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- TRIM CARD -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

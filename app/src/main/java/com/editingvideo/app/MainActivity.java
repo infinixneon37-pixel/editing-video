@@ -16,6 +16,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -52,8 +53,10 @@ public class MainActivity extends AppCompatActivity {
     // Preview Components
     private CardView cardPreview;
     private VideoView videoPreview;
+    private SeekBar seekBarPreview;
     private Handler timeHandler = new Handler();
     private Runnable updateTimeRunnable;
+    private boolean isUserSeeking = false;
 
     private List<String> selectedPaths = new ArrayList<>();
     private List<String> originalNames = new ArrayList<>();
@@ -93,6 +96,7 @@ public class MainActivity extends AppCompatActivity {
         // Preview TV Init
         cardPreview = findViewById(R.id.cardPreview);
         videoPreview = findViewById(R.id.videoPreview);
+        seekBarPreview = findViewById(R.id.seekBarPreview);
         btnPlayPause = findViewById(R.id.btnPlayPause);
         tvPreviewTime = findViewById(R.id.tvPreviewTime);
 
@@ -157,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
             
-            // Hentikan preview yang sedang berjalan
+            // Hentikan dan Reset preview jika memilih video baru
             if(videoPreview.isPlaying()) videoPreview.pause();
             cardPreview.setVisibility(View.GONE);
             timeHandler.removeCallbacks(updateTimeRunnable);
@@ -179,7 +183,7 @@ public class MainActivity extends AppCompatActivity {
                     tvSelectedFile.setTextColor(Color.parseColor("#00E676"));
                     updateStatus("Standby. Siap diproses.");
                     
-                    // Kalau cuma 1 video yang dipilih, tampilkan Mini Player!
+                    // Aktifkan Mini Player khusus jika hanya ada 1 video (Bukan Batch)
                     if (selectedPaths.size() == 1) {
                         setupPreviewPlayer(selectedPaths.get(0));
                     }
@@ -196,13 +200,17 @@ public class MainActivity extends AppCompatActivity {
         selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
     
-    // --- FITUR PREVIEW PLAYER ---
+    // --- FITUR PREVIEW PLAYER PRO ---
     private void setupPreviewPlayer(String path) {
         cardPreview.setVisibility(View.VISIBLE);
         videoPreview.setVideoPath(path);
         
         videoPreview.setOnPreparedListener(mp -> {
-            String totalTime = formatTimeString(mp.getDuration());
+            int duration = mp.getDuration();
+            seekBarPreview.setMax(duration);
+            seekBarPreview.setProgress(0);
+            
+            String totalTime = formatTimeString(duration);
             tvPreviewTime.setText("00:00 / " + totalTime);
             btnPlayPause.setText("▶ PLAY");
             
@@ -212,18 +220,43 @@ public class MainActivity extends AppCompatActivity {
                     btnPlayPause.setText("▶ PLAY");
                     timeHandler.removeCallbacks(updateTimeRunnable);
                 } else {
+                    // Auto-restart jika di-play saat posisi sudah di ujung video
+                    if (videoPreview.getCurrentPosition() >= duration - 500) {
+                        videoPreview.seekTo(0);
+                    }
                     videoPreview.start();
                     btnPlayPause.setText("⏸ PAUSE");
                     timeHandler.post(updateTimeRunnable);
                 }
             });
             
-            // Replay otomatis bila selesai
             mp.setOnCompletionListener(mp2 -> {
                 btnPlayPause.setText("▶ PLAY");
                 tvPreviewTime.setText(totalTime + " / " + totalTime);
+                seekBarPreview.setProgress(duration);
                 timeHandler.removeCallbacks(updateTimeRunnable);
             });
+        });
+
+        // Kontrol geser (Scrubbing) SeekBar manual oleh pengguna
+        seekBarPreview.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    tvPreviewTime.setText(formatTimeString(progress) + " / " + formatTimeString(videoPreview.getDuration()));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isUserSeeking = true; // Hentikan auto-update dari video saat digeser
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isUserSeeking = false;
+                videoPreview.seekTo(seekBar.getProgress()); // Memaksa video pindah ke titik baru
+            }
         });
     }
 
@@ -232,16 +265,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 if (videoPreview != null && videoPreview.isPlaying()) {
-                    String current = formatTimeString(videoPreview.getCurrentPosition());
-                    String total = formatTimeString(videoPreview.getDuration());
-                    tvPreviewTime.setText(current + " / " + total);
-                    timeHandler.postDelayed(this, 250); // update tiap 1/4 detik biar mulus
+                    if (!isUserSeeking) {
+                        int currentPos = videoPreview.getCurrentPosition();
+                        seekBarPreview.setProgress(currentPos);
+                        String current = formatTimeString(currentPos);
+                        String total = formatTimeString(videoPreview.getDuration());
+                        tvPreviewTime.setText(current + " / " + total);
+                    }
+                    // Loop super responsif setiap 100ms agar bar berjalan halus
+                    timeHandler.postDelayed(this, 100); 
                 }
             }
         };
     }
     
-    // Helper untuk mengubah Milidetik dari Android ke Format M:S
+    // Helper untuk Format Waktu Milidetik (Android) ke Format M:S
     private String formatTimeString(int millis) {
         int seconds = (millis / 1000) % 60;
         int minutes = (millis / (1000 * 60)) % 60;
@@ -439,7 +477,6 @@ public class MainActivity extends AppCompatActivity {
 
     // --- UTILITIES ---
     
-    // Konversi Format Waktu M:S ke Detik Total
     private double parseTimeToSeconds(String timeStr) {
         if (timeStr == null || timeStr.isEmpty()) return 0;
         if (timeStr.contains(":")) {
@@ -512,7 +549,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(() -> { 
             setLoading(false); 
             updateStatus(msg); 
-            // Matikan preview player saat proses selesai untuk hindari error memori
+            // Matikan preview player untuk menghemat RAM
             if(videoPreview.isPlaying()) videoPreview.pause();
             cardPreview.setVisibility(View.GONE);
             timeHandler.removeCallbacks(updateTimeRunnable);
@@ -527,7 +564,7 @@ public class MainActivity extends AppCompatActivity {
         btnLoop.setEnabled(!b); btnMerge.setEnabled(!b); btnRemux.setEnabled(!b);
         btnSelectVideo.setEnabled(!b); btnSelectMulti.setEnabled(!b);
         
-        // Disable tombol play saat sedang render/loading
+        // Disable tombol play saat memproses
         if (b) {
             if(videoPreview.isPlaying()) videoPreview.pause();
             btnPlayPause.setEnabled(false);
