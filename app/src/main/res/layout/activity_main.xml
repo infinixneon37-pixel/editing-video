@@ -186,7 +186,7 @@
                         android:id="@+id/rbLoopBoomerang"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Boomerang (Video Memantul, Audio Maju Normal)"
+                        android:text="Boomerang (Video Mundur, Audio Normal 2x)"
                         android:textColor="#E0E0E0"/>
                 </RadioGroup>
 
@@ -226,17 +226,38 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="🔗 Gabung Video (Merge &amp; Remux)"
+                    android:text="🔗 Mode Gabung &amp; Convert"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#FFFFFF"
                     android:layout_marginBottom="12dp"/>
-                <Button
-                    android:id="@+id/btnMerge"
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="55dp"
-                    android:text="GABUNG &amp; REMUX KE MP4"
-                    android:backgroundTint="#00C853" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="2"
+                    android:baselineAligned="false">
+                    <Button
+                        android:id="@+id/btnMerge"
+                        android:layout_width="0dp"
+                        android:layout_height="55dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:padding="4dp"
+                        android:text="GABUNG\n(FAST)"
+                        android:textSize="12sp"
+                        android:backgroundTint="#00C853" />
+                    <Button
+                        android:id="@+id/btnRemux"
+                        android:layout_width="0dp"
+                        android:layout_height="55dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:padding="4dp"
+                        android:text="CONVERT\nKE MP4"
+                        android:textSize="12sp"
+                        android:backgroundTint="#009688" />
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 

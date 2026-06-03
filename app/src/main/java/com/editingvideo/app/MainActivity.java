@@ -41,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvSelectedFile, tvStatus, tvConsoleLog;
     private EditText etTrimSegment, etLoopDuration;
-    private Button btnSelectVideo, btnSelectMulti, btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge;
+    private Button btnSelectVideo, btnSelectMulti, btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux;
     private RadioGroup rgLoopMode;
     private ProgressBar progressBar;
     private LinearLayout listContainer;
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         btnTrimNoAudio = findViewById(R.id.btnTrimNoAudio);
         btnLoop = findViewById(R.id.btnLoop);
         btnMerge = findViewById(R.id.btnMerge);
+        btnRemux = findViewById(R.id.btnRemux);
         rgLoopMode = findViewById(R.id.rgLoopMode);
         progressBar = findViewById(R.id.progressBar);
         listContainer = findViewById(R.id.listContainer);
@@ -74,8 +75,8 @@ public class MainActivity extends AppCompatActivity {
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
 
-        // Setup Main Folders
-        String[] subDirs = {"/Trim", "/Loop", "/Merge"};
+        // Setup Main Folders (Termasuk folder Convert baru)
+        String[] subDirs = {"/Trim", "/Loop", "/Merge", "/Convert"};
         for (String sub : subDirs) {
             File d = new File(publicBaseDir + sub);
             if (!d.exists()) d.mkdirs();
@@ -88,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         btnTrimNoAudio.setOnClickListener(v -> { if (checkInput(etTrimSegment, false)) processTrim(false); });
         btnLoop.setOnClickListener(v -> { if (checkInput(etLoopDuration, false)) processButterLoop(Integer.parseInt(etLoopDuration.getText().toString())); });
         btnMerge.setOnClickListener(v -> { if (checkInput(null, true)) processMerge(); });
+        btnRemux.setOnClickListener(v -> { if (checkInput(null, false)) processRemux(); });
     }
 
     private void openGallery(boolean allowMultiple, int reqCode) {
@@ -99,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean checkInput(EditText et, boolean isMulti) {
         if (selectedPaths.isEmpty()) { showToast("Pilih video terlebih dahulu."); return false; }
-        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video diperlukan untuk digabung."); return false; }
+        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video diperlukan untuk fitur Gabung."); return false; }
         if (et != null && et.getText().toString().isEmpty()) { showToast("Parameter durasi belum diisi."); return false; }
         return true;
     }
@@ -110,7 +112,6 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
             new Thread(() -> {
-                // Clear cache dari eksekusi sebelumnya
                 for (String path : selectedPaths) { new File(path).delete(); }
                 selectedPaths.clear(); originalNames.clear();
 
@@ -142,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
         selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
 
-    // --- FITUR TRIM (BATCH PROCESSING) ---
+    // --- FITUR TRIM ---
     private void processTrim(boolean keepAudio) {
         double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
         String outDir = publicBaseDir + "/Trim";
@@ -167,7 +168,8 @@ public class MainActivity extends AppCompatActivity {
                         String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                         String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
 
-                        String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s \"%s\"",
+                        // Parameter -pix_fmt yuv420p ditambahkan agar universal support untuk file HDR/AV1
+                        String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
                                 currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
 
                         FFmpegSession session = FFmpegKit.execute(cmd);
@@ -184,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // --- FITUR LOOP (BATCH PROCESSING) ---
+    // --- FITUR LOOP BOOMERANG PERFECT ---
     private void processButterLoop(int targetDur) {
         String outDir = publicBaseDir + "/Loop";
         int modeId = rgLoopMode.getCheckedRadioButtonId();
@@ -199,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
                     String finalOutName = "loop_" + baseName + ".mp4";
 
                     final int fileIndex = i + 1;
-                    runOnUiThread(() -> updateStatus("🧈 [File " + fileIndex + "/" + selectedPaths.size() + "] Proses Loop..."));
+                    runOnUiThread(() -> updateStatus("🧈 [File " + fileIndex + "/" + selectedPaths.size() + "] Proses Loop Filter..."));
 
                     double dur = getVideoDuration(targetVideo);
                     String safeOutPath = privateDir + "/out_loop_" + System.currentTimeMillis() + "_" + i + ".mp4";
@@ -216,14 +218,14 @@ public class MainActivity extends AppCompatActivity {
                         String cmdFilter;
 
                         if (modeId == R.id.rbLoopTwerk) {
-                            // Twerk: Video Reverse, Audio Reverse
-                            filter = "[0:v]reverse,setpts=PTS-STARTPTS[v2];[0:a]areverse,asetpts=PTS-STARTPTS[a2];[0:v][0:a][v2][a2]concat=n=2:v=1:a=1[outv][outa]";
+                            // Twerk: Split video & audio, eksekusi maju dan mundur lalu gabung agar sempurna tanpa glitch.
+                            filter = "[0:v]split=2[v1][v_rev];[v1]setpts=PTS-STARTPTS[v_fwd];[v_rev]reverse,setpts=PTS-STARTPTS[v2];[v_fwd][v2]concat=n=2:v=1:a=0[outv];[0:a]asplit=2[a1][a_rev];[a1]asetpts=PTS-STARTPTS[a_fwd];[a_rev]areverse,asetpts=PTS-STARTPTS[a2];[a_fwd][a2]concat=n=2:v=0:a=1[outa]";
                         } else {
-                            // Boomerang: Video Reverse, Audio Normal (Forward 2x)
-                            filter = "[0:v]reverse,setpts=PTS-STARTPTS[v2];[0:v][v2]concat=n=2:v=1:a=0[outv];[0:a][0:a]concat=n=2:v=0:a=1[outa]";
+                            // Boomerang: Split stream. Video maju+mundur. Audio diduplikasi maju+maju (berjalan normal 2x).
+                            filter = "[0:v]split=2[v1][v_rev];[v1]setpts=PTS-STARTPTS[v_fwd];[v_rev]reverse,setpts=PTS-STARTPTS[v2];[v_fwd][v2]concat=n=2:v=1:a=0[outv];[0:a]asplit=2[a1][a2];[a1]asetpts=PTS-STARTPTS[a_fwd];[a2]asetpts=PTS-STARTPTS[a_dup];[a_fwd][a_dup]concat=n=2:v=0:a=1[outa]";
                         }
                         
-                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac \"%s\"", targetVideo, filter, tempUnit);
+                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac -pix_fmt yuv420p \"%s\"", targetVideo, filter, tempUnit);
 
                         FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
                         if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
@@ -247,14 +249,14 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // --- FITUR GABUNG (MERGE & REMUX) ---
+    // --- FITUR GABUNG (FAST CONCAT) ---
     private void processMerge() {
         String outDir = publicBaseDir + "/Merge";
         String baseName = originalNames.get(0).replaceAll("[.][^.]+$", "");
         String finalOutName = "merged_" + baseName + ".mp4";
         String safeOutPath = privateDir + "/out_merge_" + System.currentTimeMillis() + ".mp4";
 
-        setLoading(true); updateStatus("🔗 Menggabungkan & Remuxing Video..."); listContainer.removeAllViews();
+        setLoading(true); updateStatus("🔗 Menggabungkan Video (Fast Mode)..."); listContainer.removeAllViews();
 
         new Thread(() -> {
             try {
@@ -265,25 +267,52 @@ public class MainActivity extends AppCompatActivity {
                 }
                 writer.flush(); writer.close();
 
+                // Concat demuxer (-c copy). Sangat cepat tapi format video harus 100% sama!
                 String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), safeOutPath);
 
                 FFmpegSession session = FFmpegKit.execute(cmd);
                 if (ReturnCode.isSuccess(session.getReturnCode())) {
                     moveToPublicFolder(safeOutPath, outDir, finalOutName);
-
-                    for (String path : selectedPaths) {
-                        new File(path).delete();
-                    }
+                    for (String path : selectedPaths) { new File(path).delete(); }
                     selectedPaths.clear(); originalNames.clear();
 
                     runOnUiThread(() -> {
                         addToListResult("✅ " + finalOutName);
                         tvSelectedFile.setText("[ Kosong ]");
                     });
-                    finishTask("✨ Merge Selesai!");
-                } else {
-                    throwFFmpegError(session);
+                    finishTask("✨ Gabung Video Selesai!");
+                } else { throwFFmpegError(session); }
+            } catch (Exception e) { finishError(e.getMessage()); }
+        }).start();
+    }
+
+    // --- FITUR BARU: REMUX / CONVERT MP4 BATCH ---
+    private void processRemux() {
+        String outDir = publicBaseDir + "/Convert";
+        setLoading(true); updateStatus("🔄 Mengonversi Video ke Format Standar..."); listContainer.removeAllViews();
+
+        new Thread(() -> {
+            try {
+                for (int i = 0; i < selectedPaths.size(); i++) {
+                    String targetVideo = selectedPaths.get(i);
+                    String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
+                    String finalOutName = "converted_" + baseName + ".mp4";
+
+                    final int fileIndex = i + 1;
+                    runOnUiThread(() -> updateStatus("🔄 [File " + fileIndex + "/" + selectedPaths.size() + "] Convert ke MP4..."));
+
+                    String safeOutPath = privateDir + "/out_convert_" + System.currentTimeMillis() + "_" + i + ".mp4";
+
+                    // Transcoding aman: Paksa format pixel dan audio/video codec ke standar universal.
+                    String cmd = String.format(Locale.US, "-y -i \"%s\" -c:v mpeg4 -q:v 3 -c:a aac -b:a 128k -pix_fmt yuv420p \"%s\"", targetVideo, safeOutPath);
+
+                    FFmpegSession session = FFmpegKit.execute(cmd);
+                    if (ReturnCode.isSuccess(session.getReturnCode())) {
+                        moveToPublicFolder(safeOutPath, outDir, finalOutName);
+                        runOnUiThread(() -> addToListResult("✅ " + finalOutName));
+                    } else { throwFFmpegError(session); }
                 }
+                finishTask("✨ Eksekusi Batch Convert Selesai!");
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
@@ -291,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
     // --- UTILITIES ---
     private void throwFFmpegError(FFmpegSession session) throws Exception {
         String log = session.getLogsAsString();
-        if (log == null || log.isEmpty()) log = "FFmpeg gagal dengan ReturnCode: " + session.getReturnCode() + ". Kemungkinan codec tidak didukung.";
+        if (log == null || log.isEmpty()) log = "ReturnCode: " + session.getReturnCode() + ". Codec tidak didukung.";
         throw new Exception(log);
     }
 
@@ -352,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
     private void setLoading(boolean b) {
         progressBar.setVisibility(b ? View.VISIBLE : View.GONE);
         btnTrimWithAudio.setEnabled(!b); btnTrimNoAudio.setEnabled(!b);
-        btnLoop.setEnabled(!b); btnMerge.setEnabled(!b);
+        btnLoop.setEnabled(!b); btnMerge.setEnabled(!b); btnRemux.setEnabled(!b);
         btnSelectVideo.setEnabled(!b); btnSelectMulti.setEnabled(!b);
     }
 
