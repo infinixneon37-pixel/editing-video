@@ -40,11 +40,11 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private TextView tvSelectedFile, tvStatus, tvConsoleLog;
-    private EditText etTrimSegment, etLoopDuration;
+    private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
     private Button btnSelectVideo, btnSelectMulti, btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux;
-    private RadioGroup rgLoopMode;
+    private RadioGroup rgTrimMode, rgLoopMode;
+    private LinearLayout layoutTrimAuto, layoutTrimCustom, listContainer;
     private ProgressBar progressBar;
-    private LinearLayout listContainer;
 
     private List<String> selectedPaths = new ArrayList<>();
     private List<String> originalNames = new ArrayList<>();
@@ -59,8 +59,12 @@ public class MainActivity extends AppCompatActivity {
         tvSelectedFile = findViewById(R.id.tvSelectedFile);
         tvStatus = findViewById(R.id.tvStatus);
         tvConsoleLog = findViewById(R.id.tvConsoleLog);
+        
         etTrimSegment = findViewById(R.id.etTrimSegment);
+        etTrimStart = findViewById(R.id.etTrimStart);
+        etTrimEnd = findViewById(R.id.etTrimEnd);
         etLoopDuration = findViewById(R.id.etLoopDuration);
+        
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
         btnSelectMulti = findViewById(R.id.btnSelectMultiVideo);
         btnTrimWithAudio = findViewById(R.id.btnTrimWithAudio);
@@ -68,9 +72,14 @@ public class MainActivity extends AppCompatActivity {
         btnLoop = findViewById(R.id.btnLoop);
         btnMerge = findViewById(R.id.btnMerge);
         btnRemux = findViewById(R.id.btnRemux);
+        
+        rgTrimMode = findViewById(R.id.rgTrimMode);
         rgLoopMode = findViewById(R.id.rgLoopMode);
-        progressBar = findViewById(R.id.progressBar);
+        
+        layoutTrimAuto = findViewById(R.id.layoutTrimAuto);
+        layoutTrimCustom = findViewById(R.id.layoutTrimCustom);
         listContainer = findViewById(R.id.listContainer);
+        progressBar = findViewById(R.id.progressBar);
 
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
@@ -81,11 +90,23 @@ public class MainActivity extends AppCompatActivity {
             if (!d.exists()) d.mkdirs();
         }
 
+        // Toggle tampilan menu Trim
+        rgTrimMode.setOnCheckedChangeListener((group, checkedId) -> {
+            if (checkedId == R.id.rbTrimAuto) {
+                layoutTrimAuto.setVisibility(View.VISIBLE);
+                layoutTrimCustom.setVisibility(View.GONE);
+            } else {
+                layoutTrimAuto.setVisibility(View.GONE);
+                layoutTrimCustom.setVisibility(View.VISIBLE);
+            }
+        });
+
         btnSelectVideo.setOnClickListener(v -> openGallery(false, 101));
         btnSelectMulti.setOnClickListener(v -> openGallery(true, 102));
 
-        btnTrimWithAudio.setOnClickListener(v -> { if (checkInput(etTrimSegment, false)) processTrim(true); });
-        btnTrimNoAudio.setOnClickListener(v -> { if (checkInput(etTrimSegment, false)) processTrim(false); });
+        btnTrimWithAudio.setOnClickListener(v -> { if (checkInputTrim()) processTrim(true); });
+        btnTrimNoAudio.setOnClickListener(v -> { if (checkInputTrim()) processTrim(false); });
+        
         btnLoop.setOnClickListener(v -> { if (checkInput(etLoopDuration, false)) processButterLoop(Integer.parseInt(etLoopDuration.getText().toString())); });
         btnMerge.setOnClickListener(v -> { if (checkInput(null, true)) processMerge(); });
         btnRemux.setOnClickListener(v -> { if (checkInput(null, false)) processRemux(); });
@@ -100,8 +121,18 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean checkInput(EditText et, boolean isMulti) {
         if (selectedPaths.isEmpty()) { showToast("Pilih video terlebih dahulu."); return false; }
-        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video diperlukan untuk fitur Gabung."); return false; }
+        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video diperlukan untuk fitur ini."); return false; }
         if (et != null && et.getText().toString().isEmpty()) { showToast("Parameter durasi belum diisi."); return false; }
+        return true;
+    }
+    
+    private boolean checkInputTrim() {
+        if (selectedPaths.isEmpty()) { showToast("Pilih video terlebih dahulu."); return false; }
+        if (rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto) {
+            if (etTrimSegment.getText().toString().isEmpty()) { showToast("Isi durasi part!"); return false; }
+        } else {
+            if (etTrimStart.getText().toString().isEmpty() || etTrimEnd.getText().toString().isEmpty()) { showToast("Isi Start dan End!"); return false; }
+        }
         return true;
     }
 
@@ -116,9 +147,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (data.getClipData() != null) {
                     int count = data.getClipData().getItemCount();
-                    for (int i = 0; i < count; i++) {
-                        processUriInput(data.getClipData().getItemAt(i).getUri());
-                    }
+                    for (int i = 0; i < count; i++) { processUriInput(data.getClipData().getItemAt(i).getUri()); }
                 } else if (data.getData() != null) {
                     processUriInput(data.getData());
                 }
@@ -137,14 +166,13 @@ public class MainActivity extends AppCompatActivity {
         String realName = getFileName(uri);
         realName = realName.replace("\"", "").replace("'", "");
         originalNames.add(realName);
-
         String safeInternalName = "tmp_" + System.currentTimeMillis() + "_" + selectedPaths.size() + ".mp4";
         selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
 
-    // --- FITUR TRIM ---
+    // --- FITUR TRIM (DUA MODE) ---
     private void processTrim(boolean keepAudio) {
-        double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
+        boolean isAutoSplit = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto;
         String outDir = publicBaseDir + "/Trim";
 
         setLoading(true); listContainer.removeAllViews();
@@ -154,30 +182,57 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < selectedPaths.size(); i++) {
                     String targetVideo = selectedPaths.get(i);
                     String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
-
+                    
+                    final int fileIndex = i + 1;
+                    
+                    // SMART CHECK: Gunakan ffprobe untuk cek stabilitas file dan durasi asli
                     double totalDur = getVideoDuration(targetVideo);
-                    double currentStart = 0.0;
-                    int part = 1;
 
-                    while (currentStart < totalDur) {
-                        final int currentPart = part;
-                        final int fileIndex = i + 1;
-                        runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Part " + currentPart + "..."));
+                    if (isAutoSplit) {
+                        double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
+                        double currentStart = 0.0;
+                        int part = 1;
 
-                        String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
-                        String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
+                        while (currentStart < totalDur) {
+                            final int currentPart = part;
+                            runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Part " + currentPart + "..."));
 
-                        // PENAMBAHAN ANALYZEDURATION & PROBESIZE UNTUK MENGATASI ERROR AV1/HEVC
-                        String cmd = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
-                                currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
+                            String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
+                            String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
+
+                            // Karena ffprobe sukses memindai di awal, beban rendering FFmpeg kini lebih ringan 
+                            String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
+                                    currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
+
+                            FFmpegSession session = FFmpegKit.execute(cmd);
+                            if (ReturnCode.isSuccess(session.getReturnCode())) {
+                                moveToPublicFolder(safeOutPath, outDir, finalOutName);
+                                runOnUiThread(() -> addToListResult("✅ " + finalOutName));
+                            } else { throwFFmpegError(session); }
+
+                            currentStart += d_segment; part++;
+                        }
+                    } else {
+                        // CUSTOM TRIM MODE (Spesifik Start - End)
+                        double d_start = parseTimeToSeconds(etTrimStart.getText().toString());
+                        double d_end = parseTimeToSeconds(etTrimEnd.getText().toString());
+                        
+                        if (d_start >= d_end || d_start > totalDur) throw new Exception("Waktu Start tidak valid atau melebihi durasi video.");
+                        
+                        double diff = d_end - d_start;
+                        runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Custom Trim..."));
+
+                        String finalOutName = baseName + "_custom.mp4";
+                        String safeOutPath = privateDir + "/out_trim_custom_" + System.currentTimeMillis() + ".mp4";
+
+                        String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
+                                d_start, diff, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
 
                         FFmpegSession session = FFmpegKit.execute(cmd);
                         if (ReturnCode.isSuccess(session.getReturnCode())) {
                             moveToPublicFolder(safeOutPath, outDir, finalOutName);
                             runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                         } else { throwFFmpegError(session); }
-
-                        currentStart += d_segment; part++;
                     }
                 }
                 finishTask("✨ Eksekusi Batch Trim Selesai!");
@@ -185,7 +240,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // --- FITUR LOOP BOOMERANG PERFECT ---
+    // --- FITUR LOOP BOOMERANG ---
     private void processButterLoop(int targetDur) {
         String outDir = publicBaseDir + "/Loop";
         int modeId = rgLoopMode.getCheckedRadioButtonId();
@@ -207,10 +262,9 @@ public class MainActivity extends AppCompatActivity {
 
                     if (modeId == R.id.rbLoopNormal) {
                         int numLoops = (int) (targetDur / dur) + 1;
-                        String cmd = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, safeOutPath);
+                        String cmd = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, targetVideo, targetDur, safeOutPath);
                         FFmpegSession session = FFmpegKit.execute(cmd);
                         if (!ReturnCode.isSuccess(session.getReturnCode())) throwFFmpegError(session);
-
                     } else {
                         String tempUnit = privateDir + "/temp_unit_" + i + ".mp4";
                         String filter;
@@ -222,8 +276,7 @@ public class MainActivity extends AppCompatActivity {
                             filter = "[0:v]split=2[v1][v_rev];[v1]setpts=PTS-STARTPTS[v_fwd];[v_rev]reverse,setpts=PTS-STARTPTS[v2];[v_fwd][v2]concat=n=2:v=1:a=0[outv];[0:a]asplit=2[a1][a2];[a1]asetpts=PTS-STARTPTS[a_fwd];[a2]asetpts=PTS-STARTPTS[a_dup];[a_fwd][a_dup]concat=n=2:v=0:a=1[outa]";
                         }
                         
-                        // PENAMBAHAN ANALYZEDURATION & PROBESIZE
-                        cmdFilter = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac -pix_fmt yuv420p \"%s\"", targetVideo, filter, tempUnit);
+                        cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac -pix_fmt yuv420p \"%s\"", targetVideo, filter, tempUnit);
 
                         FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
                         if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
@@ -242,7 +295,6 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                 }
                 finishTask("✨ Eksekusi Batch Loop Selesai!");
-
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
@@ -260,9 +312,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 File listFile = new File(privateDir, "list.txt");
                 FileWriter writer = new FileWriter(listFile);
-                for (String path : selectedPaths) {
-                    writer.write("file '" + path + "'\n");
-                }
+                for (String path : selectedPaths) { writer.write("file '" + path + "'\n"); }
                 writer.flush(); writer.close();
 
                 String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), safeOutPath);
@@ -283,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // --- FITUR BARU: REMUX / CONVERT MP4 BATCH ---
+    // --- FITUR CONVERT MP4 BATCH ---
     private void processRemux() {
         String outDir = publicBaseDir + "/Convert";
         setLoading(true); updateStatus("🔄 Mengonversi Video ke Format Standar..."); listContainer.removeAllViews();
@@ -300,8 +350,7 @@ public class MainActivity extends AppCompatActivity {
 
                     String safeOutPath = privateDir + "/out_convert_" + System.currentTimeMillis() + "_" + i + ".mp4";
 
-                    // PENAMBAHAN ANALYZEDURATION & PROBESIZE
-                    String cmd = String.format(Locale.US, "-y -analyzeduration 100M -probesize 100M -i \"%s\" -c:v mpeg4 -q:v 3 -c:a aac -b:a 128k -pix_fmt yuv420p \"%s\"", targetVideo, safeOutPath);
+                    String cmd = String.format(Locale.US, "-y -i \"%s\" -c:v mpeg4 -q:v 3 -c:a aac -b:a 128k -pix_fmt yuv420p \"%s\"", targetVideo, safeOutPath);
 
                     FFmpegSession session = FFmpegKit.execute(cmd);
                     if (ReturnCode.isSuccess(session.getReturnCode())) {
@@ -315,6 +364,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // --- UTILITIES ---
+    
+    // Fungsi untuk mengkonversi format "Menit:Detik" (misal 1:30) menjadi detik total (90)
+    private double parseTimeToSeconds(String timeStr) {
+        if (timeStr == null || timeStr.isEmpty()) return 0;
+        if (timeStr.contains(":")) {
+            String[] parts = timeStr.split(":");
+            return (Double.parseDouble(parts[0]) * 60) + Double.parseDouble(parts[1]);
+        }
+        return Double.parseDouble(timeStr);
+    }
+    
     private void throwFFmpegError(FFmpegSession session) throws Exception {
         String log = session.getLogsAsString();
         if (log == null || log.isEmpty()) log = "ReturnCode: " + session.getReturnCode() + ". Codec tidak didukung.";
@@ -347,10 +407,11 @@ public class MainActivity extends AppCompatActivity {
         return f.getAbsolutePath();
     }
 
-    private double getVideoDuration(String path) {
-        // Probe juga kadang butuh waktu lebih untuk AV1
+    private double getVideoDuration(String path) throws Exception {
+        // Eksekusi FFprobe di background untuk menjamin pembacaan metadata video yang akurat
         MediaInformationSession s = FFprobeKit.getMediaInformation(path);
-        return (s.getMediaInformation() != null) ? Double.parseDouble(s.getMediaInformation().getDuration()) : 0;
+        if (s.getMediaInformation() == null) throw new Exception("FFprobe gagal memindai file video. File mungkin rusak atau format tidak dikenali.");
+        return Double.parseDouble(s.getMediaInformation().getDuration());
     }
 
     private void moveToPublicFolder(String srcPath, String destDir, String name) throws Exception {
