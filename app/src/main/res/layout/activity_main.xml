@@ -81,6 +81,58 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardPreview"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#1E1E1E"
+            android:visibility="gone">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="📺 Preview (Untuk Cek Waktu Potong)"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginBottom="8dp"/>
+                <VideoView
+                    android:id="@+id/videoPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:layout_gravity="center"/>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+                    <Button
+                        android:id="@+id/btnPlayPause"
+                        android:layout_width="wrap_content"
+                        android:layout_height="45dp"
+                        android:text="▶ PLAY"
+                        android:textSize="12sp"
+                        android:backgroundTint="#00C853"/>
+                    <TextView
+                        android:id="@+id/tvPreviewTime"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="00:00 / 00:00"
+                        android:textColor="#00E676"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:gravity="end"/>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
@@ -109,14 +161,14 @@
                         android:id="@+id/rbTrimAuto"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Auto Split (Potong per part)"
+                        android:text="Auto Split (Potong berkali-kali per part)"
                         android:textColor="#E0E0E0"
                         android:checked="true"/>
                     <RadioButton
                         android:id="@+id/rbTrimCustom"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Spesifik (Potong A ke B)"
+                        android:text="Spesifik (Potong dari titik A ke B)"
                         android:textColor="#E0E0E0"/>
                 </RadioGroup>
 
@@ -126,13 +178,20 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="visible">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="*Info: Mau dipotong per berapa detik tiap part-nya?"
+                        android:textSize="11sp"
+                        android:textColor="#B0BEC5"
+                        android:layout_marginBottom="4dp"/>
                     <EditText
                         android:id="@+id/etTrimSegment"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:minHeight="50dp"
                         android:textSize="14sp"
-                        android:hint="Durasi per potong (detik)"
+                        android:hint="Contoh: 15 (untuk 15 detik)"
                         android:textColorHint="#757575"
                         android:textColor="#FFFFFF"
                         android:inputType="numberDecimal"
@@ -145,36 +204,49 @@
                     android:id="@+id/layoutTrimCustom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="2"
+                    android:orientation="vertical"
                     android:visibility="gone"
                     android:layout_marginBottom="12dp">
-                    <EditText
-                        android:id="@+id/etTrimStart"
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:minHeight="50dp"
-                        android:layout_marginEnd="4dp"
-                        android:textSize="14sp"
-                        android:hint="Start (M:S atau S)"
-                        android:textColorHint="#757575"
-                        android:textColor="#FFFFFF"
-                        android:background="#2C2C2C"
-                        android:paddingHorizontal="16dp"/>
-                    <EditText
-                        android:id="@+id/etTrimEnd"
-                        android:layout_width="0dp"
+                        android:text="*Info Format: Ketik '01:30' (Menit:Detik) ATAU ketik '90' (hanya Detik) sesuai angka di preview TV."
+                        android:textSize="11sp"
+                        android:textColor="#B0BEC5"
+                        android:textStyle="italic"
+                        android:layout_marginBottom="6dp"/>
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:minHeight="50dp"
-                        android:textSize="14sp"
-                        android:hint="End (M:S atau S)"
-                        android:textColorHint="#757575"
-                        android:textColor="#FFFFFF"
-                        android:background="#2C2C2C"
-                        android:paddingHorizontal="16dp"/>
+                        android:orientation="horizontal"
+                        android:weightSum="2">
+                        <EditText
+                            android:id="@+id/etTrimStart"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:minHeight="50dp"
+                            android:layout_marginEnd="4dp"
+                            android:textSize="14sp"
+                            android:hint="Start Awal"
+                            android:textColorHint="#757575"
+                            android:textColor="#FFFFFF"
+                            android:background="#2C2C2C"
+                            android:paddingHorizontal="16dp"/>
+                        <EditText
+                            android:id="@+id/etTrimEnd"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="4dp"
+                            android:minHeight="50dp"
+                            android:textSize="14sp"
+                            android:hint="End Akhir"
+                            android:textColorHint="#757575"
+                            android:textColor="#FFFFFF"
+                            android:background="#2C2C2C"
+                            android:paddingHorizontal="16dp"/>
+                    </LinearLayout>
                 </LinearLayout>
 
                 <LinearLayout

@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import android.view.View;
@@ -17,9 +18,11 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
@@ -39,12 +42,18 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvSelectedFile, tvStatus, tvConsoleLog;
+    private TextView tvSelectedFile, tvStatus, tvConsoleLog, tvPreviewTime;
     private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
-    private Button btnSelectVideo, btnSelectMulti, btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux;
+    private Button btnSelectVideo, btnSelectMulti, btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux, btnPlayPause;
     private RadioGroup rgTrimMode, rgLoopMode;
     private LinearLayout layoutTrimAuto, layoutTrimCustom, listContainer;
     private ProgressBar progressBar;
+    
+    // Preview Components
+    private CardView cardPreview;
+    private VideoView videoPreview;
+    private Handler timeHandler = new Handler();
+    private Runnable updateTimeRunnable;
 
     private List<String> selectedPaths = new ArrayList<>();
     private List<String> originalNames = new ArrayList<>();
@@ -81,6 +90,12 @@ public class MainActivity extends AppCompatActivity {
         listContainer = findViewById(R.id.listContainer);
         progressBar = findViewById(R.id.progressBar);
 
+        // Preview TV Init
+        cardPreview = findViewById(R.id.cardPreview);
+        videoPreview = findViewById(R.id.videoPreview);
+        btnPlayPause = findViewById(R.id.btnPlayPause);
+        tvPreviewTime = findViewById(R.id.tvPreviewTime);
+
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
 
@@ -90,7 +105,6 @@ public class MainActivity extends AppCompatActivity {
             if (!d.exists()) d.mkdirs();
         }
 
-        // Toggle tampilan menu Trim
         rgTrimMode.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.rbTrimAuto) {
                 layoutTrimAuto.setVisibility(View.VISIBLE);
@@ -106,10 +120,11 @@ public class MainActivity extends AppCompatActivity {
 
         btnTrimWithAudio.setOnClickListener(v -> { if (checkInputTrim()) processTrim(true); });
         btnTrimNoAudio.setOnClickListener(v -> { if (checkInputTrim()) processTrim(false); });
-        
         btnLoop.setOnClickListener(v -> { if (checkInput(etLoopDuration, false)) processButterLoop(Integer.parseInt(etLoopDuration.getText().toString())); });
         btnMerge.setOnClickListener(v -> { if (checkInput(null, true)) processMerge(); });
         btnRemux.setOnClickListener(v -> { if (checkInput(null, false)) processRemux(); });
+
+        setupVideoPreviewTicker();
     }
 
     private void openGallery(boolean allowMultiple, int reqCode) {
@@ -141,6 +156,12 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
+            
+            // Hentikan preview yang sedang berjalan
+            if(videoPreview.isPlaying()) videoPreview.pause();
+            cardPreview.setVisibility(View.GONE);
+            timeHandler.removeCallbacks(updateTimeRunnable);
+            
             new Thread(() -> {
                 for (String path : selectedPaths) { new File(path).delete(); }
                 selectedPaths.clear(); originalNames.clear();
@@ -157,6 +178,11 @@ public class MainActivity extends AppCompatActivity {
                     tvSelectedFile.setText(selectedPaths.size() + " File Tersedia: \n" + String.join("\n", originalNames));
                     tvSelectedFile.setTextColor(Color.parseColor("#00E676"));
                     updateStatus("Standby. Siap diproses.");
+                    
+                    // Kalau cuma 1 video yang dipilih, tampilkan Mini Player!
+                    if (selectedPaths.size() == 1) {
+                        setupPreviewPlayer(selectedPaths.get(0));
+                    }
                 });
             }).start();
         }
@@ -169,12 +195,65 @@ public class MainActivity extends AppCompatActivity {
         String safeInternalName = "tmp_" + System.currentTimeMillis() + "_" + selectedPaths.size() + ".mp4";
         selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
+    
+    // --- FITUR PREVIEW PLAYER ---
+    private void setupPreviewPlayer(String path) {
+        cardPreview.setVisibility(View.VISIBLE);
+        videoPreview.setVideoPath(path);
+        
+        videoPreview.setOnPreparedListener(mp -> {
+            String totalTime = formatTimeString(mp.getDuration());
+            tvPreviewTime.setText("00:00 / " + totalTime);
+            btnPlayPause.setText("▶ PLAY");
+            
+            btnPlayPause.setOnClickListener(v -> {
+                if (videoPreview.isPlaying()) {
+                    videoPreview.pause();
+                    btnPlayPause.setText("▶ PLAY");
+                    timeHandler.removeCallbacks(updateTimeRunnable);
+                } else {
+                    videoPreview.start();
+                    btnPlayPause.setText("⏸ PAUSE");
+                    timeHandler.post(updateTimeRunnable);
+                }
+            });
+            
+            // Replay otomatis bila selesai
+            mp.setOnCompletionListener(mp2 -> {
+                btnPlayPause.setText("▶ PLAY");
+                tvPreviewTime.setText(totalTime + " / " + totalTime);
+                timeHandler.removeCallbacks(updateTimeRunnable);
+            });
+        });
+    }
 
-    // --- FITUR TRIM (DUA MODE) ---
+    private void setupVideoPreviewTicker() {
+        updateTimeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (videoPreview != null && videoPreview.isPlaying()) {
+                    String current = formatTimeString(videoPreview.getCurrentPosition());
+                    String total = formatTimeString(videoPreview.getDuration());
+                    tvPreviewTime.setText(current + " / " + total);
+                    timeHandler.postDelayed(this, 250); // update tiap 1/4 detik biar mulus
+                }
+            }
+        };
+    }
+    
+    // Helper untuk mengubah Milidetik dari Android ke Format M:S
+    private String formatTimeString(int millis) {
+        int seconds = (millis / 1000) % 60;
+        int minutes = (millis / (1000 * 60)) % 60;
+        int hours = (millis / (1000 * 60 * 60)) % 24;
+        if (hours > 0) return String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds);
+        return String.format(Locale.US, "%02d:%02d", minutes, seconds);
+    }
+
+    // --- FITUR TRIM ---
     private void processTrim(boolean keepAudio) {
         boolean isAutoSplit = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto;
         String outDir = publicBaseDir + "/Trim";
-
         setLoading(true); listContainer.removeAllViews();
 
         new Thread(() -> {
@@ -182,10 +261,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < selectedPaths.size(); i++) {
                     String targetVideo = selectedPaths.get(i);
                     String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
-                    
                     final int fileIndex = i + 1;
-                    
-                    // SMART CHECK: Gunakan ffprobe untuk cek stabilitas file dan durasi asli
                     double totalDur = getVideoDuration(targetVideo);
 
                     if (isAutoSplit) {
@@ -200,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
                             String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                             String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
 
-                            // Karena ffprobe sukses memindai di awal, beban rendering FFmpeg kini lebih ringan 
                             String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
                                     currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
 
@@ -213,7 +288,7 @@ public class MainActivity extends AppCompatActivity {
                             currentStart += d_segment; part++;
                         }
                     } else {
-                        // CUSTOM TRIM MODE (Spesifik Start - End)
+                        // CUSTOM TRIM MODE
                         double d_start = parseTimeToSeconds(etTrimStart.getText().toString());
                         double d_end = parseTimeToSeconds(etTrimEnd.getText().toString());
                         
@@ -349,7 +424,6 @@ public class MainActivity extends AppCompatActivity {
                     runOnUiThread(() -> updateStatus("🔄 [File " + fileIndex + "/" + selectedPaths.size() + "] Convert ke MP4..."));
 
                     String safeOutPath = privateDir + "/out_convert_" + System.currentTimeMillis() + "_" + i + ".mp4";
-
                     String cmd = String.format(Locale.US, "-y -i \"%s\" -c:v mpeg4 -q:v 3 -c:a aac -b:a 128k -pix_fmt yuv420p \"%s\"", targetVideo, safeOutPath);
 
                     FFmpegSession session = FFmpegKit.execute(cmd);
@@ -365,7 +439,7 @@ public class MainActivity extends AppCompatActivity {
 
     // --- UTILITIES ---
     
-    // Fungsi untuk mengkonversi format "Menit:Detik" (misal 1:30) menjadi detik total (90)
+    // Konversi Format Waktu M:S ke Detik Total
     private double parseTimeToSeconds(String timeStr) {
         if (timeStr == null || timeStr.isEmpty()) return 0;
         if (timeStr.contains(":")) {
@@ -408,9 +482,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private double getVideoDuration(String path) throws Exception {
-        // Eksekusi FFprobe di background untuk menjamin pembacaan metadata video yang akurat
         MediaInformationSession s = FFprobeKit.getMediaInformation(path);
-        if (s.getMediaInformation() == null) throw new Exception("FFprobe gagal memindai file video. File mungkin rusak atau format tidak dikenali.");
+        if (s.getMediaInformation() == null) throw new Exception("FFprobe gagal memindai. File rusak atau format tak dikenali.");
         return Double.parseDouble(s.getMediaInformation().getDuration());
     }
 
@@ -434,7 +507,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateStatus(String msg) { tvStatus.setText(msg); tvConsoleLog.setText(""); }
-    private void finishTask(String msg) { runOnUiThread(() -> { setLoading(false); updateStatus(msg); }); }
+    
+    private void finishTask(String msg) { 
+        runOnUiThread(() -> { 
+            setLoading(false); 
+            updateStatus(msg); 
+            // Matikan preview player saat proses selesai untuk hindari error memori
+            if(videoPreview.isPlaying()) videoPreview.pause();
+            cardPreview.setVisibility(View.GONE);
+            timeHandler.removeCallbacks(updateTimeRunnable);
+        }); 
+    }
+    
     private void finishError(String m) { runOnUiThread(() -> { setLoading(false); updateStatus("❌ Error"); tvConsoleLog.setText(m); }); }
 
     private void setLoading(boolean b) {
@@ -442,6 +526,14 @@ public class MainActivity extends AppCompatActivity {
         btnTrimWithAudio.setEnabled(!b); btnTrimNoAudio.setEnabled(!b);
         btnLoop.setEnabled(!b); btnMerge.setEnabled(!b); btnRemux.setEnabled(!b);
         btnSelectVideo.setEnabled(!b); btnSelectMulti.setEnabled(!b);
+        
+        // Disable tombol play saat sedang render/loading
+        if (b) {
+            if(videoPreview.isPlaying()) videoPreview.pause();
+            btnPlayPause.setEnabled(false);
+        } else {
+            btnPlayPause.setEnabled(true);
+        }
     }
 
     private void showToast(String m) { Toast.makeText(this, m, Toast.LENGTH_SHORT).show(); }
