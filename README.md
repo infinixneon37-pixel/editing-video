@@ -1,50 +1,51 @@
-# BIGO Native Recorder
+# Editing Video Android
 
-Modern Android Native WebView application for monitoring, browsing, and recording BIGO live streams using integrated FFmpeg processing.
+A lightweight Android video editing application built using Native Java and Android SDK.
 
 ![Platform](https://img.shields.io/badge/Platform-Android-brightgreen)
 ![API](https://img.shields.io/badge/API-30%2B-blue)
 ![Java](https://img.shields.io/badge/Java-Native-orange)
-![FFmpeg](https://img.shields.io/badge/FFmpeg-Integrated-red)
+![Gradle](https://img.shields.io/badge/Build-Gradle-green)
 
 ---
 
 ## Overview
 
-BIGO Native Recorder is a lightweight Android application built with native Java and Android WebView technology.
+Editing Video Android is a native Android application designed to provide a simple and lightweight video editing interface.
 
-The application is designed for:
+The project focuses on:
 
-- BIGO live monitoring
-- Stream session detection
-- Native recording automation
-- Integrated FFmpeg processing
-- Lightweight Android deployment
-- Remote GitHub Actions build workflow
-
-This project focuses on simplicity, performance, and clean native integration without unnecessary dependencies.
+- Native Android development
+- Lightweight user interface
+- Java-based implementation
+- Fast performance
+- Minimal dependencies
+- Easy GitHub Actions integration
+- Android Studio compatibility
 
 ---
 
 ## Features
 
-### Native Android WebView
-Fast and lightweight WebView implementation optimized for Android devices.
+### Native Android Application
 
-### FFmpeg Recording Engine
-Integrated FFmpeg processing for native stream recording and media handling.
+Built entirely using Android SDK and Java without cross-platform frameworks.
 
-### Live Session Monitoring
-Automatically detects and monitors active BIGO live sessions.
+### Modern User Interface
 
-### Background Service
-Uses Android foreground/background service architecture for stable monitoring.
+Simple and responsive interface optimized for Android devices.
 
-### Offline Handling
-Displays offline fallback page when network connectivity is unavailable.
+### Video Editing Workflow
 
-### Minimal Native Architecture
-Clean project structure optimized for GitHub remote builds and lightweight APK generation.
+Provides a foundation for implementing video processing and editing features.
+
+### Lightweight Architecture
+
+Minimal project structure for easier maintenance and faster builds.
+
+### GitHub Actions Ready
+
+Can be built automatically using GitHub Actions CI/CD workflows.
 
 ---
 
@@ -52,27 +53,40 @@ Clean project structure optimized for GitHub remote builds and lightweight APK g
 
 ```text
 app/
- └── src/main/
-     ├── java/com/webview/myapplication/
-     │    ├── MainActivity.java
-     │    ├── LiveMonitorService.java
-     │    ├── RecorderTask.java
-     │    └── RecorderUtils.java
-     │
-     ├── assets/
-     │    └── offline.html
-     │
-     └── res/
+└── src/main/
+    ├── AndroidManifest.xml
+    ├── java/
+    │   └── com/editingvideo/app/
+    │       └── MainActivity.java
+    │
+    └── res/
+        ├── drawable/
+        │   ├── ic_notification.png
+        │   └── logo.png
+        │
+        ├── layout/
+        │   └── activity_main.xml
+        │
+        ├── mipmap-hdpi/
+        ├── mipmap-mdpi/
+        ├── mipmap-xhdpi/
+        ├── mipmap-xxhdpi/
+        ├── mipmap-xxxhdpi/
+        │
+        └── values/
+            ├── colors.xml
+            ├── strings.xml
+            └── themes.xml
 ```
 
 ---
 
 ## Requirements
 
-- Android 11+
-- API Level 30+
-- Internet connection
-- FFmpeg compatible streams
+- Android 11 (API 30) or newer
+- Android Studio
+- Gradle
+- JDK 17
 
 ---
 
@@ -81,26 +95,46 @@ app/
 This project uses:
 
 - Gradle Wrapper
+- Android SDK
+- Android Studio
 - GitHub Actions
-- Remote Android build pipeline
-
-APK builds are automatically generated through GitHub Actions workflow.
 
 ---
 
-## GitHub Actions
+## Build Locally
 
-Automatic build workflow includes:
+Grant execution permission:
 
-- Checkout repository
-- Setup JDK 17
-- Build Debug APK
-- Upload APK artifact
+```bash
+chmod +x gradlew
+```
 
-Workflow location:
+Build Debug APK:
+
+```bash
+./gradlew assembleDebug
+```
+
+Build Release APK:
+
+```bash
+./gradlew assembleRelease
+```
+
+---
+
+## Output APK
+
+Debug APK:
 
 ```text
-.github/workflows/build.yml
+app/build/outputs/apk/debug/app-debug.apk
+```
+
+Release APK:
+
+```text
+app/build/outputs/apk/release/app-release.apk
 ```
 
 ---
@@ -110,24 +144,10 @@ Workflow location:
 Clone repository:
 
 ```bash
-git clone https://github.com/alitatara5-gif/web-bigo.git
+git clone https://github.com/alitatara5-gif/editing-video.git
 ```
 
-Open using Android Studio or build remotely using GitHub Actions.
-
----
-
-## Build Locally
-
-```bash
-./gradlew assembleDebug
-```
-
-Generated APK:
-
-```text
-app/build/outputs/apk/debug/
-```
+Open the project using Android Studio and sync Gradle.
 
 ---
 
@@ -135,33 +155,46 @@ app/build/outputs/apk/debug/
 
 - Java
 - Android SDK
-- Android WebView
-- FFmpegKit
+- AndroidX
 - Gradle
 - GitHub Actions
 
 ---
 
-## Notes
+## Resources
 
-This project is optimized for:
+Main files:
 
-- Lightweight deployment
-- Native Android performance
-- Remote CI/CD builds
-- Minimal dependencies
-- Simple maintenance workflow
+```text
+app/src/main/java/com/editingvideo/app/MainActivity.java
+app/src/main/res/layout/activity_main.xml
+app/src/main/AndroidManifest.xml
+```
 
 ---
 
-## Disclaimer
+## Development Goals
 
-This project is intended for educational and development purposes.
+This project is intended to provide:
 
-Users are responsible for complying with platform policies, copyright regulations, and local laws regarding media recording and stream usage.
+- Native Android performance
+- Clean architecture
+- Easy maintenance
+- Fast build process
+- Expandable video editing features
 
 ---
 
 ## License
 
-GPL-3.0 License
+This project is licensed under the GPL-3.0 License.
+
+See the LICENSE file for details.
+
+---
+
+## Disclaimer
+
+This software is provided for educational and development purposes.
+
+Users are responsible for ensuring compliance with applicable laws, copyright regulations, and platform policies when processing or editing media content.
