@@ -67,7 +67,6 @@
             android:weightSum="2"
             android:layout_marginBottom="16dp">
             
-            <!-- PILIH VIDEO 1 -->
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -101,7 +100,6 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- PILIH MULTI -->
             <androidx.cardview.widget.CardView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -169,10 +167,12 @@
                     android:textStyle="bold"
                     android:textColor="#F8FAFC"
                     android:layout_marginBottom="12dp"/>
+                
+                <!-- Tinggi video dibesarkan ke 350dp -->
                 <VideoView
                     android:id="@+id/videoPreview"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="350dp"
                     android:layout_gravity="center"/>
                 
                 <SeekBar
@@ -196,14 +196,15 @@
                         android:layout_height="45dp"
                         android:text="▶ PLAY"
                         android:textSize="12sp"
+                        android:textColor="#FFFFFF"
                         android:backgroundTint="#2563EB"/>
                     <TextView
                         android:id="@+id/tvPreviewTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="00:00 / 00:00"
+                        android:text="00:00.000 / 00:00.000"
                         android:textColor="#38BDF8"
-                        android:textSize="16sp"
+                        android:textSize="15sp"
                         android:textStyle="bold"
                         android:gravity="end"/>
                 </LinearLayout>
@@ -303,9 +304,10 @@
                             android:minHeight="50dp"
                             android:layout_marginEnd="6dp"
                             android:textSize="14sp"
-                            android:hint="Start (M:S atau S)"
+                            android:hint="Start (misal: 5.150)"
                             android:textColorHint="#64748B"
                             android:textColor="#F8FAFC"
+                            android:inputType="numberDecimal"
                             android:background="#0B1320"
                             android:paddingHorizontal="16dp"/>
                         <EditText
@@ -316,9 +318,10 @@
                             android:layout_marginStart="6dp"
                             android:minHeight="50dp"
                             android:textSize="14sp"
-                            android:hint="End (M:S atau S)"
+                            android:hint="End (misal: 6.900)"
                             android:textColorHint="#64748B"
                             android:textColor="#F8FAFC"
+                            android:inputType="numberDecimal"
                             android:background="#0B1320"
                             android:paddingHorizontal="16dp"/>
                     </LinearLayout>
@@ -339,6 +342,7 @@
                         android:text="🎵 TRIM (AUDIO)"
                         android:textSize="12sp"
                         android:textStyle="bold"
+                        android:textColor="#FFFFFF"
                         android:backgroundTint="#2563EB" />
                     <Button
                         android:id="@+id/btnTrimNoAudio"
@@ -349,6 +353,7 @@
                         android:text="🔇 TRIM (NO AUDIO)"
                         android:textSize="12sp"
                         android:textStyle="bold"
+                        android:textColor="#FFFFFF"
                         android:backgroundTint="#0891B2" />
                 </LinearLayout>
             </LinearLayout>
@@ -433,6 +438,7 @@
                     android:layout_height="55dp"
                     android:text="🚀 EKSEKUSI LOOP"
                     android:textStyle="bold"
+                    android:textColor="#FFFFFF"
                     android:backgroundTint="#EA580C" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -480,6 +486,7 @@
                         android:text="🔀 GABUNG (FAST)"
                         android:textSize="12sp"
                         android:textStyle="bold"
+                        android:textColor="#FFFFFF"
                         android:backgroundTint="#059669" />
                     <Button
                         android:id="@+id/btnRemux"
@@ -490,6 +497,7 @@
                         android:text="📄 CONVERT MP4"
                         android:textSize="12sp"
                         android:textStyle="bold"
+                        android:textColor="#FFFFFF"
                         android:backgroundTint="#0284C7" />
                 </LinearLayout>
             </LinearLayout>

@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvSelectedFile, tvStatus, tvConsoleLog, tvPreviewTime;
     private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
-    // Menggunakan View untuk tombol select agar support LinearLayout (UI custom)
     private View btnSelectVideo, btnSelectMulti;
     private Button btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux, btnPlayPause;
     private RadioGroup rgTrimMode, rgLoopMode;
@@ -79,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
         etTrimEnd = findViewById(R.id.etTrimEnd);
         etLoopDuration = findViewById(R.id.etLoopDuration);
         
-        // Casting sebagai View karena di XML sekarang berbentuk LinearLayout dalam CardView
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
         btnSelectMulti = findViewById(R.id.btnSelectMultiVideo);
         
@@ -165,7 +163,6 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
             
-            // Hentikan dan Reset preview HANYA ketika MEMILIH video baru
             if(videoPreview.isPlaying()) videoPreview.pause();
             cardPreview.setVisibility(View.GONE);
             timeHandler.removeCallbacks(updateTimeRunnable);
@@ -213,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
             seekBarPreview.setProgress(0);
             
             String totalTime = formatTimeString(duration);
-            tvPreviewTime.setText("00:00 / " + totalTime);
+            tvPreviewTime.setText("00:00.000 / " + totalTime);
             btnPlayPause.setText("▶ PLAY");
             
             btnPlayPause.setOnClickListener(v -> {
@@ -268,18 +265,21 @@ public class MainActivity extends AppCompatActivity {
                         String total = formatTimeString(videoPreview.getDuration());
                         tvPreviewTime.setText(current + " / " + total);
                     }
-                    timeHandler.postDelayed(this, 100); 
+                    timeHandler.postDelayed(this, 50); // Kecepatan update tinggi untuk milidetik
                 }
             }
         };
     }
     
+    // PEMBARUAN: Format Waktu Menjadi Presisi Milidetik
     private String formatTimeString(int millis) {
+        int ms = millis % 1000;
         int seconds = (millis / 1000) % 60;
         int minutes = (millis / (1000 * 60)) % 60;
         int hours = (millis / (1000 * 60 * 60)) % 24;
-        if (hours > 0) return String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds);
-        return String.format(Locale.US, "%02d:%02d", minutes, seconds);
+        
+        if (hours > 0) return String.format(Locale.US, "%02d:%02d:%02d.%03d", hours, minutes, seconds, ms);
+        return String.format(Locale.US, "%02d:%02d.%03d", minutes, seconds, ms);
     }
 
     // --- FITUR TRIM ---
@@ -426,8 +426,6 @@ public class MainActivity extends AppCompatActivity {
                 FFmpegSession session = FFmpegKit.execute(cmd);
                 if (ReturnCode.isSuccess(session.getReturnCode())) {
                     moveToPublicFolder(safeOutPath, outDir, finalOutName);
-                    // DIBATALKAN: Penghapusan cache video (selectedPaths.clear) agar Preview tetap hidup setelah Merge.
-                    // Mereka baru akan dihapus jika user memilih tombol Pilih Video/Multi lagi.
                     
                     runOnUiThread(() -> {
                         addToListResult("✅ " + finalOutName);
@@ -536,12 +534,10 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateStatus(String msg) { tvStatus.setText(msg); tvConsoleLog.setText(""); }
     
-    // PEMBARUAN PENTING: Preview tidak dihilangkan (GONE) saat proses selesai
     private void finishTask(String msg) { 
         runOnUiThread(() -> { 
             setLoading(false); 
             updateStatus(msg); 
-            // Hanya menjeda video jika sedang berputar, tidak menyembunyikannya
             if(videoPreview != null && videoPreview.isPlaying()) {
                 videoPreview.pause();
                 btnPlayPause.setText("▶ PLAY");
