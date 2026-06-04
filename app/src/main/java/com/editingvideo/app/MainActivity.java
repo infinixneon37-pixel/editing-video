@@ -45,7 +45,9 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvSelectedFile, tvStatus, tvConsoleLog, tvPreviewTime;
     private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
-    private Button btnSelectVideo, btnSelectMulti, btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux, btnPlayPause;
+    // Menggunakan View untuk tombol select agar support LinearLayout (UI custom)
+    private View btnSelectVideo, btnSelectMulti;
+    private Button btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux, btnPlayPause;
     private RadioGroup rgTrimMode, rgLoopMode;
     private LinearLayout layoutTrimAuto, layoutTrimCustom, listContainer;
     private ProgressBar progressBar;
@@ -77,8 +79,10 @@ public class MainActivity extends AppCompatActivity {
         etTrimEnd = findViewById(R.id.etTrimEnd);
         etLoopDuration = findViewById(R.id.etLoopDuration);
         
+        // Casting sebagai View karena di XML sekarang berbentuk LinearLayout dalam CardView
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
         btnSelectMulti = findViewById(R.id.btnSelectMultiVideo);
+        
         btnTrimWithAudio = findViewById(R.id.btnTrimWithAudio);
         btnTrimNoAudio = findViewById(R.id.btnTrimNoAudio);
         btnLoop = findViewById(R.id.btnLoop);
@@ -161,7 +165,7 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
             
-            // Hentikan dan Reset preview jika memilih video baru
+            // Hentikan dan Reset preview HANYA ketika MEMILIH video baru
             if(videoPreview.isPlaying()) videoPreview.pause();
             cardPreview.setVisibility(View.GONE);
             timeHandler.removeCallbacks(updateTimeRunnable);
@@ -180,10 +184,9 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     setLoading(false);
                     tvSelectedFile.setText(selectedPaths.size() + " File Tersedia: \n" + String.join("\n", originalNames));
-                    tvSelectedFile.setTextColor(Color.parseColor("#00E676"));
-                    updateStatus("Standby. Siap diproses.");
+                    tvSelectedFile.setTextColor(Color.parseColor("#38BDF8"));
+                    updateStatus("🟢 Standby. Siap diproses.");
                     
-                    // Aktifkan Mini Player khusus jika hanya ada 1 video (Bukan Batch)
                     if (selectedPaths.size() == 1) {
                         setupPreviewPlayer(selectedPaths.get(0));
                     }
@@ -200,7 +203,6 @@ public class MainActivity extends AppCompatActivity {
         selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
     
-    // --- FITUR PREVIEW PLAYER PRO ---
     private void setupPreviewPlayer(String path) {
         cardPreview.setVisibility(View.VISIBLE);
         videoPreview.setVideoPath(path);
@@ -220,7 +222,6 @@ public class MainActivity extends AppCompatActivity {
                     btnPlayPause.setText("▶ PLAY");
                     timeHandler.removeCallbacks(updateTimeRunnable);
                 } else {
-                    // Auto-restart jika di-play saat posisi sudah di ujung video
                     if (videoPreview.getCurrentPosition() >= duration - 500) {
                         videoPreview.seekTo(0);
                     }
@@ -238,7 +239,6 @@ public class MainActivity extends AppCompatActivity {
             });
         });
 
-        // Kontrol geser (Scrubbing) SeekBar manual oleh pengguna
         seekBarPreview.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -246,16 +246,12 @@ public class MainActivity extends AppCompatActivity {
                     tvPreviewTime.setText(formatTimeString(progress) + " / " + formatTimeString(videoPreview.getDuration()));
                 }
             }
-
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                isUserSeeking = true; // Hentikan auto-update dari video saat digeser
-            }
-
+            public void onStartTrackingTouch(SeekBar seekBar) { isUserSeeking = true; }
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 isUserSeeking = false;
-                videoPreview.seekTo(seekBar.getProgress()); // Memaksa video pindah ke titik baru
+                videoPreview.seekTo(seekBar.getProgress());
             }
         });
     }
@@ -272,14 +268,12 @@ public class MainActivity extends AppCompatActivity {
                         String total = formatTimeString(videoPreview.getDuration());
                         tvPreviewTime.setText(current + " / " + total);
                     }
-                    // Loop super responsif setiap 100ms agar bar berjalan halus
                     timeHandler.postDelayed(this, 100); 
                 }
             }
         };
     }
     
-    // Helper untuk Format Waktu Milidetik (Android) ke Format M:S
     private String formatTimeString(int millis) {
         int seconds = (millis / 1000) % 60;
         int minutes = (millis / (1000 * 60)) % 60;
@@ -326,7 +320,6 @@ public class MainActivity extends AppCompatActivity {
                             currentStart += d_segment; part++;
                         }
                     } else {
-                        // CUSTOM TRIM MODE
                         double d_start = parseTimeToSeconds(etTrimStart.getText().toString());
                         double d_end = parseTimeToSeconds(etTrimEnd.getText().toString());
                         
@@ -335,7 +328,7 @@ public class MainActivity extends AppCompatActivity {
                         double diff = d_end - d_start;
                         runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Custom Trim..."));
 
-                        String finalOutName = baseName + "_custom.mp4";
+                        String finalOutName = baseName + "_custom_" + System.currentTimeMillis() + ".mp4";
                         String safeOutPath = privateDir + "/out_trim_custom_" + System.currentTimeMillis() + ".mp4";
 
                         String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
@@ -348,7 +341,7 @@ public class MainActivity extends AppCompatActivity {
                         } else { throwFFmpegError(session); }
                     }
                 }
-                finishTask("✨ Eksekusi Batch Trim Selesai!");
+                finishTask("🟢 Eksekusi Batch Trim Selesai!");
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
@@ -365,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < selectedPaths.size(); i++) {
                     String targetVideo = selectedPaths.get(i);
                     String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
-                    String finalOutName = "loop_" + baseName + ".mp4";
+                    String finalOutName = "loop_" + baseName + "_" + System.currentTimeMillis() + ".mp4";
 
                     final int fileIndex = i + 1;
                     runOnUiThread(() -> updateStatus("🧈 [File " + fileIndex + "/" + selectedPaths.size() + "] Proses Loop Filter..."));
@@ -407,7 +400,7 @@ public class MainActivity extends AppCompatActivity {
                     moveToPublicFolder(safeOutPath, outDir, finalOutName);
                     runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                 }
-                finishTask("✨ Eksekusi Batch Loop Selesai!");
+                finishTask("🟢 Eksekusi Batch Loop Selesai!");
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
@@ -416,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
     private void processMerge() {
         String outDir = publicBaseDir + "/Merge";
         String baseName = originalNames.get(0).replaceAll("[.][^.]+$", "");
-        String finalOutName = "merged_" + baseName + ".mp4";
+        String finalOutName = "merged_" + baseName + "_" + System.currentTimeMillis() + ".mp4";
         String safeOutPath = privateDir + "/out_merge_" + System.currentTimeMillis() + ".mp4";
 
         setLoading(true); updateStatus("🔗 Menggabungkan Video (Fast Mode)..."); listContainer.removeAllViews();
@@ -433,14 +426,13 @@ public class MainActivity extends AppCompatActivity {
                 FFmpegSession session = FFmpegKit.execute(cmd);
                 if (ReturnCode.isSuccess(session.getReturnCode())) {
                     moveToPublicFolder(safeOutPath, outDir, finalOutName);
-                    for (String path : selectedPaths) { new File(path).delete(); }
-                    selectedPaths.clear(); originalNames.clear();
-
+                    // DIBATALKAN: Penghapusan cache video (selectedPaths.clear) agar Preview tetap hidup setelah Merge.
+                    // Mereka baru akan dihapus jika user memilih tombol Pilih Video/Multi lagi.
+                    
                     runOnUiThread(() -> {
                         addToListResult("✅ " + finalOutName);
-                        tvSelectedFile.setText("[ Kosong ]");
                     });
-                    finishTask("✨ Gabung Video Selesai!");
+                    finishTask("🟢 Gabung Video Selesai!");
                 } else { throwFFmpegError(session); }
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
@@ -456,7 +448,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int i = 0; i < selectedPaths.size(); i++) {
                     String targetVideo = selectedPaths.get(i);
                     String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
-                    String finalOutName = "converted_" + baseName + ".mp4";
+                    String finalOutName = "converted_" + baseName + "_" + System.currentTimeMillis() + ".mp4";
 
                     final int fileIndex = i + 1;
                     runOnUiThread(() -> updateStatus("🔄 [File " + fileIndex + "/" + selectedPaths.size() + "] Convert ke MP4..."));
@@ -470,13 +462,12 @@ public class MainActivity extends AppCompatActivity {
                         runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                     } else { throwFFmpegError(session); }
                 }
-                finishTask("✨ Eksekusi Batch Convert Selesai!");
+                finishTask("🟢 Eksekusi Batch Convert Selesai!");
             } catch (Exception e) { finishError(e.getMessage()); }
         }).start();
     }
 
     // --- UTILITIES ---
-    
     private double parseTimeToSeconds(String timeStr) {
         if (timeStr == null || timeStr.isEmpty()) return 0;
         if (timeStr.contains(":")) {
@@ -539,20 +530,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addToListResult(String text) {
-        TextView tv = new TextView(this); tv.setText(text); tv.setTextColor(Color.parseColor("#00E676"));
+        TextView tv = new TextView(this); tv.setText(text); tv.setTextColor(Color.parseColor("#38BDF8"));
         listContainer.addView(tv);
     }
 
     private void updateStatus(String msg) { tvStatus.setText(msg); tvConsoleLog.setText(""); }
     
+    // PEMBARUAN PENTING: Preview tidak dihilangkan (GONE) saat proses selesai
     private void finishTask(String msg) { 
         runOnUiThread(() -> { 
             setLoading(false); 
             updateStatus(msg); 
-            // Matikan preview player untuk menghemat RAM
-            if(videoPreview.isPlaying()) videoPreview.pause();
-            cardPreview.setVisibility(View.GONE);
-            timeHandler.removeCallbacks(updateTimeRunnable);
+            // Hanya menjeda video jika sedang berputar, tidak menyembunyikannya
+            if(videoPreview != null && videoPreview.isPlaying()) {
+                videoPreview.pause();
+                btnPlayPause.setText("▶ PLAY");
+            }
         }); 
     }
     
@@ -564,12 +557,14 @@ public class MainActivity extends AppCompatActivity {
         btnLoop.setEnabled(!b); btnMerge.setEnabled(!b); btnRemux.setEnabled(!b);
         btnSelectVideo.setEnabled(!b); btnSelectMulti.setEnabled(!b);
         
-        // Disable tombol play saat memproses
         if (b) {
-            if(videoPreview.isPlaying()) videoPreview.pause();
-            btnPlayPause.setEnabled(false);
+            if(videoPreview != null && videoPreview.isPlaying()) {
+                videoPreview.pause();
+                btnPlayPause.setText("▶ PLAY");
+            }
+            if (btnPlayPause != null) btnPlayPause.setEnabled(false);
         } else {
-            btnPlayPause.setEnabled(true);
+            if (btnPlayPause != null) btnPlayPause.setEnabled(true);
         }
     }
 
