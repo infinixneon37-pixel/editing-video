@@ -26,7 +26,6 @@ public class RequestFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_request, container, false);
-
         editUrl = v.findViewById(R.id.editUrl);
         editHeaders = v.findViewById(R.id.editHeaders);
         editBody = v.findViewById(R.id.editBody);
@@ -46,10 +45,9 @@ public class RequestFragment extends Fragment {
     private void executeRequest() {
         String url = editUrl.getText().toString().trim();
         if (url.isEmpty()) {
-            Toast.makeText(getContext(), "URL Kosong", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "URL Required", Toast.LENGTH_SHORT).show();
             return;
         }
-
         String method = spinnerMethod.getSelectedItem().toString();
         String headerStr = editHeaders.getText().toString();
         String bodyStr = editBody.getText().toString();

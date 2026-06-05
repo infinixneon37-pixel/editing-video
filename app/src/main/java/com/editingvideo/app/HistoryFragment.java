@@ -17,13 +17,10 @@ public class HistoryFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_history, container, false);
         ListView listHistory = v.findViewById(R.id.listHistory);
-        
         HistoryDatabase db = new HistoryDatabase(requireContext());
         List<String> data = db.getHistory();
-        
         ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, data);
         listHistory.setAdapter(adapter);
-
         return v;
     }
 }

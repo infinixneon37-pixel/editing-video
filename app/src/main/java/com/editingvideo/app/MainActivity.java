@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 public class MainActivity extends AppCompatActivity {
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,16 +16,12 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.nav_extractor).setOnClickListener(v -> loadFragment(new ExtractorFragment()));
         findViewById(R.id.nav_history).setOnClickListener(v -> loadFragment(new HistoryFragment()));
 
-        // Load default fragment
         if (savedInstanceState == null) {
             loadFragment(new RequestFragment());
         }
     }
 
     private void loadFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragment_container, fragment)
-                .commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, fragment).commit();
     }
 }

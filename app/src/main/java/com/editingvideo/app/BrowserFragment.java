@@ -21,7 +21,6 @@ public class BrowserFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_browser, container, false);
-        
         EditText editWebUrl = v.findViewById(R.id.editWebUrl);
         Button btnGo = v.findViewById(R.id.btnGo);
         WebView webView = v.findViewById(R.id.webView);
