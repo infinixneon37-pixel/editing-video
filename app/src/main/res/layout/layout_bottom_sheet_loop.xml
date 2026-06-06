@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#111827"
+    android:orientation="vertical"
+    android:padding="20dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="🔁 MODE BUTTER LOOP"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#F8FAFC"
+        android:layout_marginBottom="16dp" />
+
+    <RadioGroup
+        android:id="@+id/rgLoopMode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp">
+        <RadioButton
+            android:id="@+id/rbLoopNormal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Loop A-B (Normal + Audio)"
+            android:textColor="#E2E8F0"
+            android:buttonTint="#9333EA"
+            android:checked="true"
+            android:layout_marginBottom="8dp"/>
+        <RadioButton
+            android:id="@+id/rbLoopTwerk"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Twerk Loop (Maju Mundur)"
+            android:buttonTint="#9333EA"
+            android:layout_marginBottom="8dp"
+            android:textColor="#E2E8F0"/>
+        <RadioButton
+            android:id="@+id/rbLoopBoomerang"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Boomerang"
+            android:buttonTint="#9333EA"
+            android:textColor="#E2E8F0"/>
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etLoopDuration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="50dp"
+        android:textSize="14sp"
+        android:hint="Target durasi loop (detik)"
+        android:textColorHint="#64748B"
+        android:textColor="#F8FAFC"
+        android:inputType="number"
+        android:background="#0A0F1C"
+        android:paddingHorizontal="16dp"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnExecuteLoop"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:text="🚀 EKSEKUSI LOOP"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:backgroundTint="#EA580C"
+        android:layout_marginBottom="16dp"/>
+</LinearLayout>
