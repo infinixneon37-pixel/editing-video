@@ -52,10 +52,10 @@
         android:layout_height="wrap_content"
         android:minHeight="50dp"
         android:textSize="14sp"
-        android:hint="Target durasi loop (detik)"
+        android:hint="Target durasi loop (detik atau MM:SS)"
         android:textColorHint="#64748B"
         android:textColor="#F8FAFC"
-        android:inputType="number"
+        android:inputType="text"
         android:background="#0A0F1C"
         android:paddingHorizontal="16dp"
         android:layout_marginBottom="16dp"/>

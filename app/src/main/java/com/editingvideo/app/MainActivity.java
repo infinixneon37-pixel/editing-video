@@ -124,6 +124,13 @@ public class MainActivity extends AppCompatActivity {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(R.layout.layout_bottom_sheet_trim);
 
+        // TRIK UX: Hilangkan efek gelap & izinkan klik layar belakang (video preview)
+        dialog.getWindow().setDimAmount(0f);
+        dialog.getWindow().setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+        );
+
         RadioGroup rgTrimMode = dialog.findViewById(R.id.rgTrimMode);
         LinearLayout layoutTrimAuto = dialog.findViewById(R.id.layoutTrimAuto);
         LinearLayout layoutTrimCustom = dialog.findViewById(R.id.layoutTrimCustom);
@@ -173,6 +180,13 @@ public class MainActivity extends AppCompatActivity {
         BottomSheetDialog dialog = new BottomSheetDialog(this);
         dialog.setContentView(R.layout.layout_bottom_sheet_loop);
 
+        // TRIK UX: Hilangkan efek gelap & izinkan klik layar belakang (video preview)
+        dialog.getWindow().setDimAmount(0f);
+        dialog.getWindow().setFlags(
+                android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
+                android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+        );
+
         RadioGroup rgLoopMode = dialog.findViewById(R.id.rgLoopMode);
         EditText etLoopDuration = dialog.findViewById(R.id.etLoopDuration);
         Button btnExecuteLoop = dialog.findViewById(R.id.btnExecuteLoop);
@@ -184,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                int targetDur = Integer.parseInt(etLoopDuration.getText().toString());
+                int targetDur = (int) parseTimeToSeconds(etLoopDuration.getText().toString());
                 int modeId = rgLoopMode.getCheckedRadioButtonId();
 
                 dialog.dismiss();
@@ -207,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                     double totalDur = getVideoDuration(targetVideo);
 
                     if (isAutoSplit) {
-                        double d_segment = Double.parseDouble(segmentVal);
+                        double d_segment = parseTimeToSeconds(segmentVal);
                         double currentStart = 0.0;
                         int part = 1;
 
@@ -491,12 +505,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private double parseTimeToSeconds(String timeStr) {
-        if (timeStr == null || timeStr.isEmpty()) return 0;
-        if (timeStr.contains(":")) {
-            String[] parts = timeStr.split(":");
-            return (Double.parseDouble(parts[0]) * 60) + Double.parseDouble(parts[1]);
+        if (timeStr == null || timeStr.trim().isEmpty()) return 0;
+        timeStr = timeStr.trim();
+        
+        try {
+            if (timeStr.contains(":")) {
+                String[] parts = timeStr.split(":");
+                if (parts.length == 3) {
+                    return (Double.parseDouble(parts[0]) * 3600) + 
+                           (Double.parseDouble(parts[1]) * 60) + 
+                           Double.parseDouble(parts[2]);
+                } else if (parts.length == 2) {
+                    return (Double.parseDouble(parts[0]) * 60) + 
+                           Double.parseDouble(parts[1]);
+                }
+            }
+            return Double.parseDouble(timeStr);
+        } catch (Exception e) {
+            return 0; 
         }
-        return Double.parseDouble(timeStr);
     }
 
     private void throwFFmpegError(FFmpegSession session) throws Exception {

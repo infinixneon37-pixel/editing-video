@@ -107,8 +107,8 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="PILIH VIDEO (1)"
-                            android:textSize="13sp"
+                            android:text="PILIH VIDEO"
+                            android:textSize="12sp"
                             android:textStyle="bold"
                             android:textColor="#FFFFFF" />
                         <TextView
