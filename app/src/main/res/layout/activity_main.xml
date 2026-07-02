@@ -1,745 +1,293 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#0A0F1C"
-    android:fillViewport="true">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
-
-        <!-- HEADER -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:layout_marginTop="4dp"
-            android:layout_marginBottom="20dp">
-            
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Video "
-                    android:textSize="26sp"
-                    android:textStyle="bold"
-                    android:textColor="#F8FAFC" />
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Editor Pro"
-                    android:textSize="26sp"
-                    android:textStyle="bold"
-                    android:textColor="#3B82F6" />
-            </LinearLayout>
-
-            <androidx.cardview.widget.CardView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="#111827">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="12dp"
-                    android:paddingVertical="4dp"
-                    android:text="⚡ FFmpeg-Kit Engine"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:textColor="#2DD4BF" />
-            </androidx.cardview.widget.CardView>
-        </LinearLayout>
-
-        <!-- FILE SELECTION (SLIM & PROFESSIONAL) -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="2"
-            android:layout_marginBottom="12dp">
-            
-            <!-- PILIH VIDEO 1 -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="#1D4ED8">
-                <LinearLayout
-                    android:id="@+id/btnSelectVideo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true">
-                    
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        app:cardBackgroundColor="#33FFFFFF"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="▶"
-                            android:gravity="center"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"/>
-                    </androidx.cardview.widget.CardView>
-                    
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="10dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="PILIH VIDEO (1)"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Pilih satu video"
-                            android:textSize="9sp"
-                            android:layout_marginTop="1dp"
-                            android:textColor="#BFDBFE" />
-                    </LinearLayout>
-                    
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        app:cardBackgroundColor="#33FFFFFF"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="❯"
-                            android:gravity="center"
-                            android:textColor="#FFFFFF"
-                            android:textSize="10sp"/>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-
-            <!-- PILIH MULTI -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                app:cardCornerRadius="12dp"
-                app:cardBackgroundColor="#7C3AED">
-                <LinearLayout
-                    android:id="@+id/btnSelectMultiVideo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="12dp"
-                    android:gravity="center_vertical"
-                    android:foreground="?attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true">
-                    
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        app:cardBackgroundColor="#33FFFFFF"
-                        app:cardCornerRadius="8dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="📂"
-                            android:gravity="center"
-                            android:textColor="#FFFFFF"
-                            android:textSize="12sp"/>
-                    </androidx.cardview.widget.CardView>
-                    
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="10dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="PILIH BATCH"
-                            android:textSize="13sp"
-                            android:textStyle="bold"
-                            android:textColor="#FFFFFF" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Banyak sekaligus"
-                            android:textSize="9sp"
-                            android:layout_marginTop="1dp"
-                            android:textColor="#DDD6FE" />
-                    </LinearLayout>
-                    
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        app:cardBackgroundColor="#33FFFFFF"
-                        app:cardCornerRadius="12dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="❯"
-                            android:gravity="center"
-                            android:textColor="#FFFFFF"
-                            android:textSize="10sp"/>
-                    </androidx.cardview.widget.CardView>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
-        </LinearLayout>
+        android:padding="16dp"
+        android:background="#111827">
 
         <TextView
-            android:id="@+id/tvSelectedFile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:text="[ Kosong ]"
-            android:textColor="#EF4444"
-            android:textStyle="italic"
-            android:gravity="center"/>
+            android:text="Video Editor Pro"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#F8FAFC"
+            android:gravity="center"
+            android:layout_marginBottom="12dp"/>
 
-        <!-- TV PREVIEW CARD -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPreview"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardBackgroundColor="#111827"
-            app:cardElevation="0dp"
-            android:visibility="gone">
-            <LinearLayout
+            android:layout_height="220dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="#000000"
+            app:cardElevation="0dp">
+            
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="📺 "
-                        android:textSize="16sp"/>
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="PREVIEW VIDEO"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:textColor="#F8FAFC"/>
-                </LinearLayout>
+                android:layout_height="match_parent">
                 
                 <VideoView
                     android:id="@+id/videoPreview"
                     android:layout_width="match_parent"
-                    android:layout_height="350dp"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"/>
-                
-                <SeekBar
-                    android:id="@+id/seekBarPreview"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:progressTint="#3B82F6"
-                    android:thumbTint="#3B82F6"
-                    android:paddingHorizontal="8dp"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginTop="8dp">
-                    <Button
-                        android:id="@+id/btnPlayPause"
-                        android:layout_width="wrap_content"
-                        android:layout_height="45dp"
-                        android:text="▶ PLAY"
-                        android:textSize="12sp"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#2563EB"/>
-                    <TextView
-                        android:id="@+id/tvPreviewTime"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="00:00.000 / 00:00.000"
-                        android:textColor="#38BDF8"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:gravity="end"/>
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- TRIM CARD -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardBackgroundColor="#111827"
-            app:cardElevation="0dp">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                
-                <!-- HEADER SEKSI -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
                     
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        app:cardBackgroundColor="#1E293B"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="✂"
-                            android:gravity="center"
-                            android:textColor="#38BDF8"
-                            android:textSize="16sp"/>
-                    </androidx.cardview.widget.CardView>
-                    
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="MODE POTONG (TRIM)"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="#F8FAFC" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Potong video presisi milidetik"
-                            android:textSize="11sp"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#94A3B8" />
-                    </LinearLayout>
-                </LinearLayout>
-                
-                <RadioGroup
-                    android:id="@+id/rgTrimMode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp">
-                    <RadioButton
-                        android:id="@+id/rbTrimAuto"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Auto Split (Potong berkali-kali per part)\nVideo akan dipotong otomatis per interval"
-                        android:textColor="#E2E8F0"
-                        android:buttonTint="#3B82F6"
-                        android:checked="true"
-                        android:layout_marginBottom="8dp"/>
-                    <RadioButton
-                        android:id="@+id/rbTrimCustom"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Spesifik (Potong dari titik A ke B)\nPilih start &amp; end point secara manual"
-                        android:buttonTint="#3B82F6"
-                        android:textColor="#E2E8F0"/>
-                </RadioGroup>
-
-                <LinearLayout
-                    android:id="@+id/layoutTrimAuto"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="visible">
-                    <EditText
-                        android:id="@+id/etTrimSegment"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="50dp"
-                        android:textSize="14sp"
-                        android:hint="Masukkan durasi per part (detik)"
-                        android:textColorHint="#64748B"
-                        android:textColor="#F8FAFC"
-                        android:inputType="numberDecimal"
-                        android:background="#0A0F1C"
-                        android:paddingHorizontal="16dp"
-                        android:layout_marginBottom="16dp"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/layoutTrimCustom"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:visibility="gone"
-                    android:layout_marginBottom="16dp">
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:weightSum="2">
-                        <EditText
-                            android:id="@+id/etTrimStart"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:minHeight="50dp"
-                            android:layout_marginEnd="6dp"
-                            android:textSize="14sp"
-                            android:hint="Start (misal: 5.063)"
-                            android:textColorHint="#64748B"
-                            android:textColor="#F8FAFC"
-                            android:inputType="numberDecimal"
-                            android:background="#0A0F1C"
-                            android:paddingHorizontal="16dp"/>
-                        <EditText
-                            android:id="@+id/etTrimEnd"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:layout_marginStart="6dp"
-                            android:minHeight="50dp"
-                            android:textSize="14sp"
-                            android:hint="End (misal: 6.838)"
-                            android:textColorHint="#64748B"
-                            android:textColor="#F8FAFC"
-                            android:inputType="numberDecimal"
-                            android:background="#0A0F1C"
-                            android:paddingHorizontal="16dp"/>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="2"
-                    android:baselineAligned="false">
-                    <!-- ICON TEXT PUTIH SOLID -->
-                    <Button
-                        android:id="@+id/btnTrimWithAudio"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        android:text="♪ TRIM (AUDIO)"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#2563EB" />
-                    <Button
-                        android:id="@+id/btnTrimNoAudio"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        android:text="🔇 TRIM (NO AUDIO)"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#0891B2" />
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- LOOP CARD -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardBackgroundColor="#111827"
-            app:cardElevation="0dp">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-                    
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        app:cardBackgroundColor="#1E293B"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="🔁"
-                            android:gravity="center"
-                            android:textColor="#F59E0B"
-                            android:textSize="14sp"/>
-                    </androidx.cardview.widget.CardView>
-                    
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="MODE BUTTER LOOP"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="#F8FAFC" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Buat loop video dengan berbagai efek"
-                            android:textSize="11sp"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#94A3B8" />
-                    </LinearLayout>
-                </LinearLayout>
-                
-                <RadioGroup
-                    android:id="@+id/rgLoopMode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="12dp">
-                    <RadioButton
-                        android:id="@+id/rbLoopNormal"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Loop A-B (Normal + Audio)\nLoop normal dengan audio bawaan"
-                        android:textColor="#E2E8F0"
-                        android:buttonTint="#9333EA"
-                        android:checked="true"
-                        android:layout_marginBottom="8dp"/>
-                    <RadioButton
-                        android:id="@+id/rbLoopTwerk"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Twerk Loop\nEfek video &amp; audio maju mundur halus"
-                        android:buttonTint="#9333EA"
-                        android:layout_marginBottom="8dp"
-                        android:textColor="#E2E8F0"/>
-                    <RadioButton
-                        android:id="@+id/rbLoopBoomerang"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Boomerang\nVideo memantul mundur, audio normal 2x"
-                        android:buttonTint="#9333EA"
-                        android:textColor="#E2E8F0"/>
-                </RadioGroup>
-
-                <EditText
-                    android:id="@+id/etLoopDuration"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:minHeight="50dp"
-                    android:textSize="14sp"
-                    android:hint="Masukkan target durasi loop (detik)"
-                    android:textColorHint="#64748B"
-                    android:textColor="#F8FAFC"
-                    android:inputType="number"
-                    android:background="#0A0F1C"
-                    android:paddingHorizontal="16dp"
-                    android:layout_marginBottom="16dp"/>
-                <Button
-                    android:id="@+id/btnLoop"
-                    android:layout_width="match_parent"
-                    android:layout_height="50dp"
-                    android:text="🚀 EKSEKUSI LOOP"
-                    android:textStyle="bold"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#EA580C" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- MERGE & CONVERT CARD -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardBackgroundColor="#111827"
-            app:cardElevation="0dp">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="16dp">
-                    
-                    <androidx.cardview.widget.CardView
-                        android:layout_width="32dp"
-                        android:layout_height="32dp"
-                        app:cardBackgroundColor="#1E293B"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp">
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            android:text="🔗"
-                            android:gravity="center"
-                            android:textColor="#10B981"
-                            android:textSize="14sp"/>
-                    </androidx.cardview.widget.CardView>
-                    
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:layout_marginStart="12dp">
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="MODE GABUNG &amp; CONVERT"
-                            android:textSize="14sp"
-                            android:textStyle="bold"
-                            android:textColor="#F8FAFC" />
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Gabungkan atau konversi video"
-                            android:textSize="11sp"
-                            android:layout_marginTop="2dp"
-                            android:textColor="#94A3B8" />
-                    </LinearLayout>
-                </LinearLayout>
-                
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:weightSum="2"
-                    android:baselineAligned="false">
-                    <Button
-                        android:id="@+id/btnMerge"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="6dp"
-                        android:text="🔀 GABUNG (FAST)"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#059669" />
-                    <Button
-                        android:id="@+id/btnRemux"
-                        android:layout_width="0dp"
-                        android:layout_height="50dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="6dp"
-                        android:text="📄 CONVERT MP4"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#FFFFFF"
-                        android:backgroundTint="#0284C7" />
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <ProgressBar
-            android:id="@+id/progressBar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:visibility="gone" />
-
-        <TextView
-            android:id="@+id/tvStatus"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:text="🟢 Status: Standby"
-            android:gravity="center"
-            android:textColor="#10B981"
-            android:textStyle="bold" />
-
-        <!-- CONSOLE -->
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="32dp"
-            app:cardCornerRadius="12dp"
-            app:cardBackgroundColor="#050811">
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
                 <TextView
-                    android:layout_width="match_parent"
+                    android:id="@+id/tvEmptyPreview"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="[ root@localhost ~ ]# Output:"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="#10B981"
-                    android:layout_marginBottom="12dp"/>
-                <LinearLayout
-                    android:id="@+id/listContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"/>
-                <TextView
-                    android:id="@+id/tvConsoleLog"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="Menunggu perintah..."
+                    android:text="TIDAK ADA VIDEO"
                     android:textColor="#475569"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace" />
-            </LinearLayout>
+                    android:textStyle="bold"
+                    android:layout_gravity="center"/>
+            </FrameLayout>
         </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp">
+            <SeekBar
+                android:id="@+id/seekBarPreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:progressTint="#3B82F6"
+                android:thumbTint="#3B82F6"/>
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="8dp">
+                <TextView
+                    android:id="@+id/btnPlayPause"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▶"
+                    android:textSize="24sp"
+                    android:textColor="#3B82F6"
+                    android:clickable="true"
+                    android:focusable="true"/>
+                <TextView
+                    android:id="@+id/tvPreviewTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="00:00.000 / 00:00.000"
+                    android:textColor="#94A3B8"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:gravity="end"/>
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-</ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:background="#1E293B"
+        android:gravity="center_vertical">
+        
+        <LinearLayout
+            android:id="@+id/btnViewFiles"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?attr/selectableItemBackground">
+            <TextView
+                android:id="@+id/tvActiveFile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📹 [Belum ada video]"
+                android:textColor="#F8FAFC"
+                android:textStyle="bold"
+                android:textSize="14sp"/>
+            <TextView
+                android:id="@+id/tvBatchCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📁 0 file dipilih (tap untuk melihat)"
+                android:textColor="#64748B"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSelectVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="+ VIDEO"
+            android:textSize="10sp"
+            android:backgroundTint="#3B82F6"
+            android:layout_marginEnd="8dp"/>
+            
+        <Button
+            android:id="@+id/btnSelectMultiVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="+ BATCH"
+            android:textSize="10sp"
+            android:backgroundTint="#7C3AED"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="#0F172A"
+        android:weightSum="4">
+        <TextView
+            android:id="@+id/tabTrim"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="✂️\nTrim"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:textColor="#3B82F6"
+            android:background="#1E293B"
+            android:clickable="true"/>
+        <TextView
+            android:id="@+id/tabLoop"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="🔁\nLoop"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:textColor="#64748B"
+            android:clickable="true"/>
+        <TextView
+            android:id="@+id/tabMerge"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="🎬\nGabung"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:textColor="#64748B"
+            android:clickable="true"/>
+        <TextView
+            android:id="@+id/tabConvert"
+            android:layout_width="0dp"
+            android:layout_height="50dp"
+            android:layout_weight="1"
+            android:text="🔄\nConvert"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:textColor="#64748B"
+            android:clickable="true"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+        
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                
+                <LinearLayout
+                    android:id="@+id/panelTrim"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    
+                    <RadioGroup android:id="@+id/rgTrimMode" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="12dp">
+                        <RadioButton android:id="@+id/rbTrimAuto" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Auto Split" android:textColor="#E2E8F0" android:buttonTint="#3B82F6" android:checked="true"/>
+                        <RadioButton android:id="@+id/rbTrimCustom" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Spesifik" android:buttonTint="#3B82F6" android:textColor="#E2E8F0"/>
+                    </RadioGroup>
+
+                    <EditText android:id="@+id/etTrimSegment" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Durasi per part (detik)" android:textColor="#FFF" android:textColorHint="#64748B" android:background="#1E293B" android:padding="12dp" android:inputType="numberDecimal" android:layout_marginBottom="16dp"/>
+                    
+                    <LinearLayout android:id="@+id/layoutTrimCustom" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:visibility="gone" android:layout_marginBottom="16dp">
+                        <EditText android:id="@+id/etTrimStart" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:hint="Start (misal 5.0)" android:textColor="#FFF" android:background="#1E293B" android:padding="12dp" android:layout_marginEnd="4dp" android:inputType="numberDecimal"/>
+                        <EditText android:id="@+id/etTrimEnd" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:hint="End (misal 15.0)" android:textColor="#FFF" android:background="#1E293B" android:padding="12dp" android:layout_marginStart="4dp" android:inputType="numberDecimal"/>
+                    </LinearLayout>
+
+                    <Button android:id="@+id/btnTrimWithAudio" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="✂️ EKSEKUSI TRIM (AUDIO)" android:backgroundTint="#2563EB" android:layout_marginBottom="8dp"/>
+                    <Button android:id="@+id/btnTrimNoAudio" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="✂️ EKSEKUSI TRIM (NO AUDIO)" android:backgroundTint="#0891B2"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/panelLoop"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    
+                    <RadioGroup android:id="@+id/rgLoopMode" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp">
+                        <RadioButton android:id="@+id/rbLoopNormal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Loop A-B (Normal)" android:buttonTint="#9333EA" android:textColor="#E2E8F0" android:checked="true"/>
+                        <RadioButton android:id="@+id/rbLoopTwerk" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Twerk Mode" android:buttonTint="#9333EA" android:textColor="#E2E8F0"/>
+                        <RadioButton android:id="@+id/rbLoopBoomerang" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Boomerang Mode" android:buttonTint="#9333EA" android:textColor="#E2E8F0"/>
+                    </RadioGroup>
+
+                    <EditText android:id="@+id/etLoopDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Target durasi (detik)" android:textColor="#FFF" android:textColorHint="#64748B" android:background="#1E293B" android:padding="12dp" android:inputType="number" android:layout_marginBottom="16dp"/>
+                    <Button android:id="@+id/btnLoop" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔁 EKSEKUSI LOOP" android:backgroundTint="#EA580C"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/panelMerge"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gabungkan semua file batch (Fast Concat)" android:textColor="#94A3B8" android:layout_marginBottom="16dp"/>
+                    <Button android:id="@+id/btnMerge" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎬 GABUNG VIDEO" android:backgroundTint="#059669"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/panelConvert"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Konversi batch ke standar MP4 (H.264/AAC)" android:textColor="#94A3B8" android:layout_marginBottom="16dp"/>
+                    <Button android:id="@+id/btnRemux" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔄 CONVERT BATCH" android:backgroundTint="#0284C7"/>
+                </LinearLayout>
+
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/listContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="24dp"/>
+                
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="#050811">
+        <ProgressBar android:id="@+id/progressBar" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:visibility="gone"/>
+        <TextView android:id="@+id/tvStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🟢 Siap" android:textColor="#10B981" android:gravity="center" android:textSize="12sp" android:layout_marginTop="4dp"/>
+    </LinearLayout>
+
+</LinearLayout>

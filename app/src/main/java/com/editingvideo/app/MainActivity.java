@@ -1,5 +1,6 @@
 package com.editingvideo.app;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -8,13 +9,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -23,7 +22,6 @@ import android.widget.VideoView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
 
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.FFmpegSession;
@@ -43,22 +41,35 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView tvSelectedFile, tvStatus, tvConsoleLog, tvPreviewTime;
-    private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
-    private View btnSelectVideo, btnSelectMulti;
-    private Button btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux, btnPlayPause;
-    private RadioGroup rgTrimMode, rgLoopMode;
-    private LinearLayout layoutTrimAuto, layoutTrimCustom, listContainer;
+    // Status & Output
+    private TextView tvStatus;
     private ProgressBar progressBar;
-    
+    private LinearLayout listContainer;
+
+    // Tabs & Panels
+    private TextView tabTrim, tabLoop, tabMerge, tabConvert;
+    private View panelTrim, panelLoop, panelMerge, panelConvert;
+
+    // File Selection UI
+    private TextView tvActiveFile, tvBatchCount, tvEmptyPreview;
+    private View btnViewFiles;
+    private Button btnSelectVideo, btnSelectMulti;
+
+    // Action Inputs & Buttons
+    private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
+    private Button btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux;
+    private RadioGroup rgTrimMode, rgLoopMode;
+    private LinearLayout layoutTrimCustom;
+
     // Preview Components
-    private CardView cardPreview;
     private VideoView videoPreview;
     private SeekBar seekBarPreview;
+    private TextView btnPlayPause, tvPreviewTime;
     private Handler timeHandler = new Handler();
     private Runnable updateTimeRunnable;
     private boolean isUserSeeking = false;
 
+    // File Data
     private List<String> selectedPaths = new ArrayList<>();
     private List<String> originalNames = new ArrayList<>();
     private String privateDir;
@@ -69,54 +80,68 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tvSelectedFile = findViewById(R.id.tvSelectedFile);
+        // Init General UI
         tvStatus = findViewById(R.id.tvStatus);
-        tvConsoleLog = findViewById(R.id.tvConsoleLog);
-        
+        progressBar = findViewById(R.id.progressBar);
+        listContainer = findViewById(R.id.listContainer);
+
+        // Init Tabs & Panels
+        tabTrim = findViewById(R.id.tabTrim);
+        tabLoop = findViewById(R.id.tabLoop);
+        tabMerge = findViewById(R.id.tabMerge);
+        tabConvert = findViewById(R.id.tabConvert);
+        panelTrim = findViewById(R.id.panelTrim);
+        panelLoop = findViewById(R.id.panelLoop);
+        panelMerge = findViewById(R.id.panelMerge);
+        panelConvert = findViewById(R.id.panelConvert);
+
+        // Init File Selection UI
+        tvActiveFile = findViewById(R.id.tvActiveFile);
+        tvBatchCount = findViewById(R.id.tvBatchCount);
+        btnViewFiles = findViewById(R.id.btnViewFiles);
+        btnSelectVideo = findViewById(R.id.btnSelectVideo);
+        btnSelectMulti = findViewById(R.id.btnSelectMultiVideo);
+
+        // Init Action UI
         etTrimSegment = findViewById(R.id.etTrimSegment);
         etTrimStart = findViewById(R.id.etTrimStart);
         etTrimEnd = findViewById(R.id.etTrimEnd);
         etLoopDuration = findViewById(R.id.etLoopDuration);
-        
-        btnSelectVideo = findViewById(R.id.btnSelectVideo);
-        btnSelectMulti = findViewById(R.id.btnSelectMultiVideo);
-        
         btnTrimWithAudio = findViewById(R.id.btnTrimWithAudio);
         btnTrimNoAudio = findViewById(R.id.btnTrimNoAudio);
         btnLoop = findViewById(R.id.btnLoop);
         btnMerge = findViewById(R.id.btnMerge);
         btnRemux = findViewById(R.id.btnRemux);
-        
         rgTrimMode = findViewById(R.id.rgTrimMode);
         rgLoopMode = findViewById(R.id.rgLoopMode);
-        
-        layoutTrimAuto = findViewById(R.id.layoutTrimAuto);
         layoutTrimCustom = findViewById(R.id.layoutTrimCustom);
-        listContainer = findViewById(R.id.listContainer);
-        progressBar = findViewById(R.id.progressBar);
 
-        // Preview TV Init
-        cardPreview = findViewById(R.id.cardPreview);
+        // Init Preview UI
         videoPreview = findViewById(R.id.videoPreview);
         seekBarPreview = findViewById(R.id.seekBarPreview);
         btnPlayPause = findViewById(R.id.btnPlayPause);
         tvPreviewTime = findViewById(R.id.tvPreviewTime);
+        tvEmptyPreview = findViewById(R.id.tvEmptyPreview);
 
+        // Setup Directories
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
-
         String[] subDirs = {"/Trim", "/Loop", "/Merge", "/Convert"};
         for (String sub : subDirs) {
             File d = new File(publicBaseDir + sub);
             if (!d.exists()) d.mkdirs();
         }
 
+        // Logic Bindings
+        setupTabNavigation();
+        btnViewFiles.setOnClickListener(v -> showSelectedFilesDialog());
+
         rgTrimMode.setOnCheckedChangeListener((group, checkedId) -> {
             if (checkedId == R.id.rbTrimAuto) {
-                layoutTrimAuto.setVisibility(View.VISIBLE);
+                etTrimSegment.setVisibility(View.VISIBLE);
                 layoutTrimCustom.setVisibility(View.GONE);
             } else {
-                layoutTrimAuto.setVisibility(View.GONE);
+                etTrimSegment.setVisibility(View.GONE);
                 layoutTrimCustom.setVisibility(View.VISIBLE);
             }
         });
@@ -133,6 +158,51 @@ public class MainActivity extends AppCompatActivity {
         setupVideoPreviewTicker();
     }
 
+    private void setupTabNavigation() {
+        View.OnClickListener tabClickListener = v -> {
+            tabTrim.setTextColor(Color.parseColor("#64748B"));
+            tabTrim.setBackgroundColor(Color.TRANSPARENT);
+            tabLoop.setTextColor(Color.parseColor("#64748B"));
+            tabLoop.setBackgroundColor(Color.TRANSPARENT);
+            tabMerge.setTextColor(Color.parseColor("#64748B"));
+            tabMerge.setBackgroundColor(Color.TRANSPARENT);
+            tabConvert.setTextColor(Color.parseColor("#64748B"));
+            tabConvert.setBackgroundColor(Color.TRANSPARENT);
+
+            panelTrim.setVisibility(View.GONE);
+            panelLoop.setVisibility(View.GONE);
+            panelMerge.setVisibility(View.GONE);
+            panelConvert.setVisibility(View.GONE);
+
+            TextView clickedTab = (TextView) v;
+            clickedTab.setTextColor(Color.parseColor("#3B82F6"));
+            clickedTab.setBackgroundColor(Color.parseColor("#1E293B"));
+
+            if (v.getId() == R.id.tabTrim) panelTrim.setVisibility(View.VISIBLE);
+            else if (v.getId() == R.id.tabLoop) panelLoop.setVisibility(View.VISIBLE);
+            else if (v.getId() == R.id.tabMerge) panelMerge.setVisibility(View.VISIBLE);
+            else if (v.getId() == R.id.tabConvert) panelConvert.setVisibility(View.VISIBLE);
+        };
+
+        tabTrim.setOnClickListener(tabClickListener);
+        tabLoop.setOnClickListener(tabClickListener);
+        tabMerge.setOnClickListener(tabClickListener);
+        tabConvert.setOnClickListener(tabClickListener);
+    }
+
+    private void showSelectedFilesDialog() {
+        if (originalNames.isEmpty()) {
+            Toast.makeText(this, "Belum ada file yang dipilih", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("File Terpilih (" + originalNames.size() + ")");
+        builder.setItems(originalNames.toArray(new String[0]), null);
+        builder.setPositiveButton("Tutup", null);
+        builder.show();
+    }
+
     private void openGallery(boolean allowMultiple, int reqCode) {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("video/*");
@@ -146,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
         if (et != null && et.getText().toString().isEmpty()) { showToast("Parameter durasi belum diisi."); return false; }
         return true;
     }
-    
+
     private boolean checkInputTrim() {
         if (selectedPaths.isEmpty()) { showToast("Pilih video terlebih dahulu."); return false; }
         if (rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto) {
@@ -162,11 +232,10 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && data != null) {
             setLoading(true);
-            
+
             if(videoPreview.isPlaying()) videoPreview.pause();
-            cardPreview.setVisibility(View.GONE);
             timeHandler.removeCallbacks(updateTimeRunnable);
-            
+
             new Thread(() -> {
                 for (String path : selectedPaths) { new File(path).delete(); }
                 selectedPaths.clear(); originalNames.clear();
@@ -180,11 +249,19 @@ public class MainActivity extends AppCompatActivity {
 
                 runOnUiThread(() -> {
                     setLoading(false);
-                    tvSelectedFile.setText(selectedPaths.size() + " File Tersedia: \n" + String.join("\n", originalNames));
-                    tvSelectedFile.setTextColor(Color.parseColor("#38BDF8"));
+                    if (!originalNames.isEmpty()) {
+                        tvActiveFile.setText("📹 " + originalNames.get(0));
+                        tvEmptyPreview.setVisibility(View.GONE);
+                        
+                        if (originalNames.size() > 1) {
+                            tvBatchCount.setText("📁 + " + (originalNames.size() - 1) + " file lain dipilih (tap)");
+                        } else {
+                            tvBatchCount.setText("📁 1 file dipilih (tap untuk opsi)");
+                        }
+                    }
+
                     updateStatus("🟢 Standby. Siap diproses.");
-                    
-                    if (selectedPaths.size() == 1) {
+                    if (selectedPaths.size() >= 1) {
                         setupPreviewPlayer(selectedPaths.get(0));
                     }
                 });
@@ -199,37 +276,37 @@ public class MainActivity extends AppCompatActivity {
         String safeInternalName = "tmp_" + System.currentTimeMillis() + "_" + selectedPaths.size() + ".mp4";
         selectedPaths.add(copyUriToPrivate(uri, safeInternalName));
     }
-    
+
     private void setupPreviewPlayer(String path) {
-        cardPreview.setVisibility(View.VISIBLE);
+        videoPreview.setVisibility(View.VISIBLE);
         videoPreview.setVideoPath(path);
-        
+
         videoPreview.setOnPreparedListener(mp -> {
             int duration = mp.getDuration();
             seekBarPreview.setMax(duration);
             seekBarPreview.setProgress(0);
-            
+
             String totalTime = formatTimeString(duration);
             tvPreviewTime.setText("00:00.000 / " + totalTime);
-            btnPlayPause.setText("▶ PLAY");
-            
+            btnPlayPause.setText("▶");
+
             btnPlayPause.setOnClickListener(v -> {
                 if (videoPreview.isPlaying()) {
                     videoPreview.pause();
-                    btnPlayPause.setText("▶ PLAY");
+                    btnPlayPause.setText("▶");
                     timeHandler.removeCallbacks(updateTimeRunnable);
                 } else {
                     if (videoPreview.getCurrentPosition() >= duration - 500) {
                         videoPreview.seekTo(0);
                     }
                     videoPreview.start();
-                    btnPlayPause.setText("⏸ PAUSE");
+                    btnPlayPause.setText("⏸");
                     timeHandler.post(updateTimeRunnable);
                 }
             });
-            
+
             mp.setOnCompletionListener(mp2 -> {
-                btnPlayPause.setText("▶ PLAY");
+                btnPlayPause.setText("▶");
                 tvPreviewTime.setText(totalTime + " / " + totalTime);
                 seekBarPreview.setProgress(duration);
                 timeHandler.removeCallbacks(updateTimeRunnable);
@@ -265,19 +342,18 @@ public class MainActivity extends AppCompatActivity {
                         String total = formatTimeString(videoPreview.getDuration());
                         tvPreviewTime.setText(current + " / " + total);
                     }
-                    timeHandler.postDelayed(this, 50); // Kecepatan update tinggi untuk milidetik
+                    timeHandler.postDelayed(this, 50);
                 }
             }
         };
     }
-    
-    // PEMBARUAN: Format Waktu Menjadi Presisi Milidetik
+
     private String formatTimeString(int millis) {
         int ms = millis % 1000;
         int seconds = (millis / 1000) % 60;
         int minutes = (millis / (1000 * 60)) % 60;
         int hours = (millis / (1000 * 60 * 60)) % 24;
-        
+
         if (hours > 0) return String.format(Locale.US, "%02d:%02d:%02d.%03d", hours, minutes, seconds, ms);
         return String.format(Locale.US, "%02d:%02d.%03d", minutes, seconds, ms);
     }
@@ -300,31 +376,28 @@ public class MainActivity extends AppCompatActivity {
                         double d_segment = Double.parseDouble(etTrimSegment.getText().toString());
                         double currentStart = 0.0;
                         int part = 1;
-
                         while (currentStart < totalDur) {
                             final int currentPart = part;
                             runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Part " + currentPart + "..."));
 
                             String finalOutName = baseName + "_part" + String.format(Locale.US, "%03d", part) + ".mp4";
                             String safeOutPath = privateDir + "/out_trim_" + System.currentTimeMillis() + "_" + part + ".mp4";
-
                             String cmd = String.format(Locale.US, "-y -ss %.3f -t %.3f -i \"%s\" -c:v mpeg4 -q:v 3 %s -pix_fmt yuv420p \"%s\"",
                                     currentStart, d_segment, targetVideo, keepAudio ? "-c:a aac -b:a 128k" : "-an", safeOutPath);
-
+                            
                             FFmpegSession session = FFmpegKit.execute(cmd);
                             if (ReturnCode.isSuccess(session.getReturnCode())) {
                                 moveToPublicFolder(safeOutPath, outDir, finalOutName);
                                 runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                             } else { throwFFmpegError(session); }
-
                             currentStart += d_segment; part++;
                         }
                     } else {
                         double d_start = parseTimeToSeconds(etTrimStart.getText().toString());
                         double d_end = parseTimeToSeconds(etTrimEnd.getText().toString());
-                        
+
                         if (d_start >= d_end || d_start > totalDur) throw new Exception("Waktu Start tidak valid atau melebihi durasi video.");
-                        
+
                         double diff = d_end - d_start;
                         runOnUiThread(() -> updateStatus("✂️ [File " + fileIndex + "/" + selectedPaths.size() + "] Ekstraksi Custom Trim..."));
 
@@ -346,11 +419,10 @@ public class MainActivity extends AppCompatActivity {
         }).start();
     }
 
-    // --- FITUR LOOP BOOMERANG ---
+    // --- FITUR LOOP ---
     private void processButterLoop(int targetDur) {
         String outDir = publicBaseDir + "/Loop";
         int modeId = rgLoopMode.getCheckedRadioButtonId();
-
         setLoading(true); listContainer.removeAllViews();
 
         new Thread(() -> {
@@ -359,10 +431,10 @@ public class MainActivity extends AppCompatActivity {
                     String targetVideo = selectedPaths.get(i);
                     String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
                     String finalOutName = "loop_" + baseName + "_" + System.currentTimeMillis() + ".mp4";
-
                     final int fileIndex = i + 1;
-                    runOnUiThread(() -> updateStatus("🧈 [File " + fileIndex + "/" + selectedPaths.size() + "] Proses Loop Filter..."));
-
+                    
+                    runOnUiThread(() -> updateStatus("🔁 [File " + fileIndex + "/" + selectedPaths.size() + "] Proses Loop..."));
+                    
                     double dur = getVideoDuration(targetVideo);
                     String safeOutPath = privateDir + "/out_loop_" + System.currentTimeMillis() + "_" + i + ".mp4";
 
@@ -375,7 +447,7 @@ public class MainActivity extends AppCompatActivity {
                         String tempUnit = privateDir + "/temp_unit_" + i + ".mp4";
                         String filter;
                         String cmdFilter;
-
+                        
                         if (modeId == R.id.rbLoopTwerk) {
                             filter = "[0:v]split=2[v1][v_rev];[v1]setpts=PTS-STARTPTS[v_fwd];[v_rev]reverse,setpts=PTS-STARTPTS[v2];[v_fwd][v2]concat=n=2:v=1:a=0[outv];[0:a]asplit=2[a1][a_rev];[a1]asetpts=PTS-STARTPTS[a_fwd];[a_rev]areverse,asetpts=PTS-STARTPTS[a2];[a_fwd][a2]concat=n=2:v=0:a=1[outa]";
                         } else {
@@ -383,20 +455,17 @@ public class MainActivity extends AppCompatActivity {
                         }
                         
                         cmdFilter = String.format(Locale.US, "-y -i \"%s\" -filter_complex \"%s\" -map [outv] -map [outa] -c:v mpeg4 -q:v 3 -c:a aac -pix_fmt yuv420p \"%s\"", targetVideo, filter, tempUnit);
-
                         FFmpegSession sessionFilter = FFmpegKit.execute(cmdFilter);
                         if (!ReturnCode.isSuccess(sessionFilter.getReturnCode())) throwFFmpegError(sessionFilter);
-
+                        
                         double unitDur = dur * 2;
                         int numLoops = (int) (targetDur / unitDur) + 1;
                         String cmdLoop = String.format(Locale.US, "-y -stream_loop %d -i \"%s\" -c copy -t %d \"%s\"", numLoops, tempUnit, targetDur, safeOutPath);
-
                         FFmpegSession sessionLoop = FFmpegKit.execute(cmdLoop);
                         if (!ReturnCode.isSuccess(sessionLoop.getReturnCode())) throwFFmpegError(sessionLoop);
 
                         new File(tempUnit).delete();
                     }
-
                     moveToPublicFolder(safeOutPath, outDir, finalOutName);
                     runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                 }
@@ -411,9 +480,9 @@ public class MainActivity extends AppCompatActivity {
         String baseName = originalNames.get(0).replaceAll("[.][^.]+$", "");
         String finalOutName = "merged_" + baseName + "_" + System.currentTimeMillis() + ".mp4";
         String safeOutPath = privateDir + "/out_merge_" + System.currentTimeMillis() + ".mp4";
-
-        setLoading(true); updateStatus("🔗 Menggabungkan Video (Fast Mode)..."); listContainer.removeAllViews();
-
+        
+        setLoading(true); updateStatus("🎬 Menggabungkan Video (Fast Mode)..."); listContainer.removeAllViews();
+        
         new Thread(() -> {
             try {
                 File listFile = new File(privateDir, "list.txt");
@@ -422,14 +491,11 @@ public class MainActivity extends AppCompatActivity {
                 writer.flush(); writer.close();
 
                 String cmd = String.format(Locale.US, "-y -f concat -safe 0 -i \"%s\" -c copy \"%s\"", listFile.getAbsolutePath(), safeOutPath);
-
                 FFmpegSession session = FFmpegKit.execute(cmd);
+                
                 if (ReturnCode.isSuccess(session.getReturnCode())) {
                     moveToPublicFolder(safeOutPath, outDir, finalOutName);
-                    
-                    runOnUiThread(() -> {
-                        addToListResult("✅ " + finalOutName);
-                    });
+                    runOnUiThread(() -> addToListResult("✅ " + finalOutName));
                     finishTask("🟢 Gabung Video Selesai!");
                 } else { throwFFmpegError(session); }
             } catch (Exception e) { finishError(e.getMessage()); }
@@ -440,15 +506,15 @@ public class MainActivity extends AppCompatActivity {
     private void processRemux() {
         String outDir = publicBaseDir + "/Convert";
         setLoading(true); updateStatus("🔄 Mengonversi Video ke Format Standar..."); listContainer.removeAllViews();
-
+        
         new Thread(() -> {
             try {
                 for (int i = 0; i < selectedPaths.size(); i++) {
                     String targetVideo = selectedPaths.get(i);
                     String baseName = originalNames.get(i).replaceAll("[.][^.]+$", "");
                     String finalOutName = "converted_" + baseName + "_" + System.currentTimeMillis() + ".mp4";
-
                     final int fileIndex = i + 1;
+                    
                     runOnUiThread(() -> updateStatus("🔄 [File " + fileIndex + "/" + selectedPaths.size() + "] Convert ke MP4..."));
 
                     String safeOutPath = privateDir + "/out_convert_" + System.currentTimeMillis() + "_" + i + ".mp4";
@@ -474,7 +540,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return Double.parseDouble(timeStr);
     }
-    
+
     private void throwFFmpegError(FFmpegSession session) throws Exception {
         String log = session.getLogsAsString();
         if (log == null || log.isEmpty()) log = "ReturnCode: " + session.getReturnCode() + ". Codec tidak didukung.";
@@ -516,36 +582,46 @@ public class MainActivity extends AppCompatActivity {
     private void moveToPublicFolder(String srcPath, String destDir, String name) throws Exception {
         File s = new File(srcPath);
         File dir = new File(destDir);
-        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Gagal membuat direktori rute publik: " + destDir);
-
+        if (!dir.exists() && !dir.mkdirs()) throw new Exception("Gagal membuat direktori rute publik.");
+        
         File d = new File(destDir, name);
         try (InputStream in = new FileInputStream(s); OutputStream out = new FileOutputStream(d)) {
             byte[] b = new byte[4096]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l);
             s.delete();
         } catch (Exception e) {
-            throw new Exception("Transfer I/O diblokir sistem Android. Detail: " + e.getMessage());
+            throw new Exception("Transfer I/O diblokir sistem. Detail: " + e.getMessage());
         }
     }
 
     private void addToListResult(String text) {
-        TextView tv = new TextView(this); tv.setText(text); tv.setTextColor(Color.parseColor("#38BDF8"));
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextColor(Color.parseColor("#38BDF8"));
         listContainer.addView(tv);
     }
 
-    private void updateStatus(String msg) { tvStatus.setText(msg); tvConsoleLog.setText(""); }
-    
-    private void finishTask(String msg) { 
-        runOnUiThread(() -> { 
-            setLoading(false); 
-            updateStatus(msg); 
+    private void updateStatus(String msg) {
+        tvStatus.setText(msg);
+    }
+
+    private void finishTask(String msg) {
+        runOnUiThread(() -> {
+            setLoading(false);
+            updateStatus(msg);
             if(videoPreview != null && videoPreview.isPlaying()) {
                 videoPreview.pause();
-                btnPlayPause.setText("▶ PLAY");
+                btnPlayPause.setText("▶");
             }
-        }); 
+        });
     }
-    
-    private void finishError(String m) { runOnUiThread(() -> { setLoading(false); updateStatus("❌ Error"); tvConsoleLog.setText(m); }); }
+
+    private void finishError(String m) {
+        runOnUiThread(() -> {
+            setLoading(false);
+            updateStatus("❌ Error");
+            addToListResult("❌ " + m);
+        });
+    }
 
     private void setLoading(boolean b) {
         progressBar.setVisibility(b ? View.VISIBLE : View.GONE);
@@ -556,7 +632,7 @@ public class MainActivity extends AppCompatActivity {
         if (b) {
             if(videoPreview != null && videoPreview.isPlaying()) {
                 videoPreview.pause();
-                btnPlayPause.setText("▶ PLAY");
+                btnPlayPause.setText("▶");
             }
             if (btnPlayPause != null) btnPlayPause.setEnabled(false);
         } else {
@@ -564,5 +640,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showToast(String m) { Toast.makeText(this, m, Toast.LENGTH_SHORT).show(); }
+    private void showToast(String m) {
+        Toast.makeText(this, m, Toast.LENGTH_SHORT).show();
+    }
 }
