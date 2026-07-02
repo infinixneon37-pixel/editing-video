@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText etTrimSegment, etTrimStart, etTrimEnd, etLoopDuration;
     private Button btnTrimWithAudio, btnTrimNoAudio, btnLoop, btnMerge, btnRemux, btnSelectVideo, btnSelectMulti;
     private RadioGroup rgTrimMode, rgLoopMode;
+    
+    // Preview Komponen
     private VideoView videoPreview;
     private SeekBar seekBarPreview;
     private TextView btnPlayPause, tvPreviewTime;
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private Runnable updateTimeRunnable;
     private boolean isUserSeeking = false;
 
-    // Managers
+    // Managers dari Modular
     private Trim trimManager;
     private Loop loopManager;
     private Merge mergeManager;
@@ -59,23 +61,25 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Init Managers
+        // Inisialisasi Managers
         trimManager = new Trim();
         loopManager = new Loop();
         mergeManager = new Merge();
         convertManager = new Convert();
 
-        // Init UI
+        // Inisialisasi UI
         tvStatus = findViewById(R.id.tvStatus);
         progressBar = findViewById(R.id.progressBar);
         listContainer = findViewById(R.id.listContainer);
         tvActiveFile = findViewById(R.id.tvActiveFile);
         tvBatchCount = findViewById(R.id.tvBatchCount);
         tvEmptyPreview = findViewById(R.id.tvEmptyPreview);
+        
         etTrimSegment = findViewById(R.id.etTrimSegment);
         etTrimStart = findViewById(R.id.etTrimStart);
         etTrimEnd = findViewById(R.id.etTrimEnd);
         etLoopDuration = findViewById(R.id.etLoopDuration);
+        
         btnTrimWithAudio = findViewById(R.id.btnTrimWithAudio);
         btnTrimNoAudio = findViewById(R.id.btnTrimNoAudio);
         btnLoop = findViewById(R.id.btnLoop);
@@ -83,15 +87,17 @@ public class MainActivity extends AppCompatActivity {
         btnRemux = findViewById(R.id.btnRemux);
         btnSelectVideo = findViewById(R.id.btnSelectVideo);
         btnSelectMulti = findViewById(R.id.btnSelectMultiVideo);
+        
         rgTrimMode = findViewById(R.id.rgTrimMode);
         rgLoopMode = findViewById(R.id.rgLoopMode);
         layoutTrimCustom = findViewById(R.id.layoutTrimCustom);
+        
         videoPreview = findViewById(R.id.videoPreview);
         seekBarPreview = findViewById(R.id.seekBarPreview);
         btnPlayPause = findViewById(R.id.btnPlayPause);
         tvPreviewTime = findViewById(R.id.tvPreviewTime);
 
-        // Directories
+        // Pengaturan Direktori
         privateDir = getExternalFilesDir(Environment.DIRECTORY_MOVIES).getAbsolutePath();
         publicBaseDir = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Movies/EditingVideo";
         for (String sub : new String[]{"/Trim", "/Loop", "/Merge", "/Convert"}) {
@@ -111,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
             layoutTrimCustom.setVisibility(id == R.id.rbTrimCustom ? View.VISIBLE : View.GONE);
         });
 
-        // --- EXECUTION BINDINGS ---
+        // --- CALLBACK EKSEKUSI FFMPEG ---
         FFmpegHelper.ProcessCallback commonCallback = new FFmpegHelper.ProcessCallback() {
             @Override public void onProgress(String msg) { runOnUiThread(() -> updateStatus(msg)); }
             @Override public void onSuccess(String name) { runOnUiThread(() -> { setLoading(false); updateStatus("✅ Selesai"); addToListResult("✅ " + name); }); }
@@ -121,8 +127,13 @@ public class MainActivity extends AppCompatActivity {
         btnTrimWithAudio.setOnClickListener(v -> {
             if (checkInputTrim()) {
                 setLoading(true);
-                double start = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? Double.parseDouble(etTrimSegment.getText().toString()) : Double.parseDouble(etTrimStart.getText().toString());
-                double end = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? 0 : Double.parseDouble(etTrimEnd.getText().toString());
+                // Mencegah crash jika user ngetik pakai koma (,)
+                double start = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? 
+                        Double.parseDouble(etTrimSegment.getText().toString().replace(",", ".")) : 
+                        Double.parseDouble(etTrimStart.getText().toString().replace(",", "."));
+                double end = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? 0 : 
+                        Double.parseDouble(etTrimEnd.getText().toString().replace(",", "."));
+                
                 trimManager.execute(selectedPaths.get(0), privateDir, publicBaseDir + "/Trim", getBaseName(), rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto, start, end, true, commonCallback);
             }
         });
@@ -130,8 +141,12 @@ public class MainActivity extends AppCompatActivity {
         btnTrimNoAudio.setOnClickListener(v -> {
             if (checkInputTrim()) {
                 setLoading(true);
-                double start = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? Double.parseDouble(etTrimSegment.getText().toString()) : Double.parseDouble(etTrimStart.getText().toString());
-                double end = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? 0 : Double.parseDouble(etTrimEnd.getText().toString());
+                double start = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? 
+                        Double.parseDouble(etTrimSegment.getText().toString().replace(",", ".")) : 
+                        Double.parseDouble(etTrimStart.getText().toString().replace(",", "."));
+                double end = rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto ? 0 : 
+                        Double.parseDouble(etTrimEnd.getText().toString().replace(",", "."));
+                
                 trimManager.execute(selectedPaths.get(0), privateDir, publicBaseDir + "/Trim", getBaseName(), rgTrimMode.getCheckedRadioButtonId() == R.id.rbTrimAuto, start, end, false, commonCallback);
             }
         });
@@ -139,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
         btnLoop.setOnClickListener(v -> {
             if (checkInput(etLoopDuration, false)) {
                 setLoading(true);
-                loopManager.execute(selectedPaths.get(0), privateDir, publicBaseDir + "/Loop", getBaseName(), rgLoopMode.getCheckedRadioButtonId(), Integer.parseInt(etLoopDuration.getText().toString()), commonCallback);
+                loopManager.execute(selectedPaths.get(0), privateDir, publicBaseDir + "/Loop", getBaseName(), rgLoopMode.getCheckedRadioButtonId(), Integer.parseInt(etLoopDuration.getText().toString().replace(",", ".")), commonCallback);
             }
         });
 
@@ -153,21 +168,19 @@ public class MainActivity extends AppCompatActivity {
         btnRemux.setOnClickListener(v -> {
             if (checkInput(null, false)) {
                 setLoading(true);
-                for(int i=0; i<selectedPaths.size(); i++) {
+                for(int i = 0; i < selectedPaths.size(); i++) {
                     convertManager.execute(selectedPaths.get(i), privateDir, publicBaseDir + "/Convert", originalNames.get(i).replaceAll("[.][^.]+$", ""), commonCallback);
                 }
             }
         });
     }
 
-    // --- Sisa Utilities UI ---
-    private String getBaseName() { return originalNames.get(0).replaceAll("[.][^.]+$", ""); }
-
+    // --- LOGIKA UI & NAVIGASI TAB ---
     private void setupTabNavigation() {
         View.OnClickListener listener = v -> {
             int[] tabs = {R.id.tabTrim, R.id.tabLoop, R.id.tabMerge, R.id.tabConvert};
             int[] panels = {R.id.panelTrim, R.id.panelLoop, R.id.panelMerge, R.id.panelConvert};
-            for (int i=0; i<tabs.length; i++) {
+            for (int i=0; i < tabs.length; i++) {
                 TextView t = findViewById(tabs[i]); View p = findViewById(panels[i]);
                 if (v.getId() == tabs[i]) {
                     t.setTextColor(Color.parseColor("#3B82F6")); t.setBackgroundColor(Color.parseColor("#1E293B"));
@@ -178,18 +191,169 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         };
-        findViewById(R.id.tabTrim).setOnClickListener(listener); findViewById(R.id.tabLoop).setOnClickListener(listener);
-        findViewById(R.id.tabMerge).setOnClickListener(listener); findViewById(R.id.tabConvert).setOnClickListener(listener);
+        findViewById(R.id.tabTrim).setOnClickListener(listener); 
+        findViewById(R.id.tabLoop).setOnClickListener(listener);
+        findViewById(R.id.tabMerge).setOnClickListener(listener); 
+        findViewById(R.id.tabConvert).setOnClickListener(listener);
     }
 
-    // --- Utilities Input, Dialog, dan Player biarkan persis seperti kode sebelumnya ---
-    // (Fungsi openGallery, onActivityResult, processUriInput, setupPreviewPlayer, formatTimeString dll)
-    // Cukup copy-paste fungsi tersebut dari kode MainActivity versi sebelumnya.
+    // --- LOGIKA FILE PICKER ---
+    private void openGallery(boolean allowMultiple, int reqCode) {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT); 
+        intent.setType("video/*");
+        if (allowMultiple) intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+        startActivityForResult(intent, reqCode);
+    }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK && data != null) {
+            setLoading(true); 
+            if(videoPreview.isPlaying()) videoPreview.pause();
+            timeHandler.removeCallbacks(updateTimeRunnable);
+
+            new Thread(() -> {
+                for (String path : selectedPaths) new File(path).delete();
+                selectedPaths.clear(); originalNames.clear();
+                
+                if (data.getClipData() != null) {
+                    for (int i = 0; i < data.getClipData().getItemCount(); i++) 
+                        processUriInput(data.getClipData().getItemAt(i).getUri());
+                } else if (data.getData() != null) {
+                    processUriInput(data.getData());
+                }
+
+                runOnUiThread(() -> {
+                    setLoading(false);
+                    if (!originalNames.isEmpty()) {
+                        tvActiveFile.setText("📹 " + originalNames.get(0)); 
+                        tvEmptyPreview.setVisibility(View.GONE);
+                        tvBatchCount.setText(originalNames.size() > 1 ? "📁 + " + (originalNames.size() - 1) + " file lain" : "📁 1 file dipilih");
+                        setupPreviewPlayer(selectedPaths.get(0));
+                    }
+                    updateStatus("🟢 Standby. Siap diproses.");
+                });
+            }).start();
+        }
+    }
+
+    private void processUriInput(Uri uri) {
+        String realName = "video_" + System.currentTimeMillis() + ".mp4";
+        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
+            if (cursor != null && cursor.moveToFirst()) 
+                realName = cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME));
+        } catch (Exception e) {}
+        
+        originalNames.add(realName.replace("\"", "").replace("'", ""));
+        File f = new File(privateDir, "tmp_" + System.currentTimeMillis() + "_" + selectedPaths.size() + ".mp4");
+        
+        try (InputStream in = getContentResolver().openInputStream(uri); OutputStream out = new FileOutputStream(f)) {
+            byte[] b = new byte[4096]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l);
+        } catch (Exception e) {}
+        
+        selectedPaths.add(f.getAbsolutePath());
+    }
+
+    // --- LOGIKA VIDEO PLAYER & PREVIEW (FULL) ---
+    private void setupPreviewPlayer(String path) {
+        videoPreview.setVisibility(View.VISIBLE);
+        videoPreview.setVideoPath(path);
+
+        videoPreview.setOnPreparedListener(mp -> {
+            int duration = mp.getDuration();
+            seekBarPreview.setMax(duration);
+            seekBarPreview.setProgress(0);
+
+            String totalTime = formatTimeString(duration);
+            tvPreviewTime.setText("00:00.000 / " + totalTime);
+            btnPlayPause.setText("▶");
+
+            btnPlayPause.setOnClickListener(v -> {
+                if (videoPreview.isPlaying()) {
+                    videoPreview.pause();
+                    btnPlayPause.setText("▶");
+                    timeHandler.removeCallbacks(updateTimeRunnable);
+                } else {
+                    if (videoPreview.getCurrentPosition() >= duration - 500) {
+                        videoPreview.seekTo(0);
+                    }
+                    videoPreview.start();
+                    btnPlayPause.setText("⏸");
+                    timeHandler.post(updateTimeRunnable);
+                }
+            });
+
+            mp.setOnCompletionListener(mp2 -> {
+                btnPlayPause.setText("▶");
+                tvPreviewTime.setText(totalTime + " / " + totalTime);
+                seekBarPreview.setProgress(duration);
+                timeHandler.removeCallbacks(updateTimeRunnable);
+            });
+        });
+
+        seekBarPreview.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser) {
+                    tvPreviewTime.setText(formatTimeString(progress) + " / " + formatTimeString(videoPreview.getDuration()));
+                }
+            }
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) { isUserSeeking = true; }
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isUserSeeking = false;
+                videoPreview.seekTo(seekBar.getProgress());
+            }
+        });
+    }
+
+    private void setupVideoPreviewTicker() {
+        updateTimeRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (videoPreview != null && videoPreview.isPlaying()) {
+                    if (!isUserSeeking) {
+                        int currentPos = videoPreview.getCurrentPosition();
+                        seekBarPreview.setProgress(currentPos);
+                        String current = formatTimeString(currentPos);
+                        String total = formatTimeString(videoPreview.getDuration());
+                        tvPreviewTime.setText(current + " / " + total);
+                    }
+                    timeHandler.postDelayed(this, 50); // Loop cepat untuk refresh milidetik
+                }
+            }
+        };
+    }
+
+    private String formatTimeString(int millis) {
+        int ms = millis % 1000;
+        int seconds = (millis / 1000) % 60;
+        int minutes = (millis / (1000 * 60)) % 60;
+        int hours = (millis / (1000 * 60 * 60)) % 24;
+
+        if (hours > 0) return String.format(Locale.US, "%02d:%02d:%02d.%03d", hours, minutes, seconds, ms);
+        return String.format(Locale.US, "%02d:%02d.%03d", minutes, seconds, ms);
+    }
+
+    private void showSelectedFilesDialog() {
+        if (originalNames.isEmpty()) {
+            Toast.makeText(this, "Belum ada file", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert);
+        builder.setTitle("File Terpilih (" + originalNames.size() + ")");
+        builder.setItems(originalNames.toArray(new String[0]), null);
+        builder.setPositiveButton("Tutup", null);
+        builder.show();
+    }
+
+    // --- UTILITIES CHECK & STATUS ---
     private boolean checkInput(EditText et, boolean isMulti) {
         if (selectedPaths.isEmpty()) { showToast("Pilih video terlebih dahulu."); return false; }
-        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video."); return false; }
-        if (et != null && et.getText().toString().isEmpty()) { showToast("Parameter belum diisi."); return false; }
+        if (isMulti && selectedPaths.size() < 2) { showToast("Minimal 2 video diperlukan."); return false; }
+        if (et != null && et.getText().toString().isEmpty()) { showToast("Parameter durasi belum diisi."); return false; }
         return true;
     }
 
@@ -203,62 +367,25 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    private void openGallery(boolean allowMultiple, int reqCode) {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT); intent.setType("video/*");
-        if (allowMultiple) intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
-        startActivityForResult(intent, reqCode);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK && data != null) {
-            setLoading(true); if(videoPreview.isPlaying()) videoPreview.pause();
-            new Thread(() -> {
-                for (String path : selectedPaths) new File(path).delete();
-                selectedPaths.clear(); originalNames.clear();
-                if (data.getClipData() != null) {
-                    for (int i = 0; i < data.getClipData().getItemCount(); i++) processUriInput(data.getClipData().getItemAt(i).getUri());
-                } else if (data.getData() != null) processUriInput(data.getData());
-
-                runOnUiThread(() -> {
-                    setLoading(false);
-                    if (!originalNames.isEmpty()) {
-                        tvActiveFile.setText("📹 " + originalNames.get(0)); tvEmptyPreview.setVisibility(View.GONE);
-                        tvBatchCount.setText(originalNames.size() > 1 ? "📁 + " + (originalNames.size() - 1) + " file lain" : "📁 1 file dipilih");
-                        setupPreviewPlayer(selectedPaths.get(0));
-                    }
-                });
-            }).start();
-        }
-    }
-
-    private void processUriInput(Uri uri) {
-        String realName = "video_" + System.currentTimeMillis() + ".mp4"; // Simplified name extractor
-        try (Cursor cursor = getContentResolver().query(uri, null, null, null, null)) {
-            if (cursor != null && cursor.moveToFirst()) realName = cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME));
-        }
-        originalNames.add(realName.replace("\"", "").replace("'", ""));
-        File f = new File(privateDir, "tmp_" + System.currentTimeMillis() + "_" + selectedPaths.size() + ".mp4");
-        try (InputStream in = getContentResolver().openInputStream(uri); OutputStream out = new FileOutputStream(f)) {
-            byte[] b = new byte[4096]; int l; while ((l = in.read(b)) > 0) out.write(b, 0, l);
-        } catch (Exception e) {}
-        selectedPaths.add(f.getAbsolutePath());
-    }
-
-    private void setupPreviewPlayer(String path) {
-        videoPreview.setVisibility(View.VISIBLE); videoPreview.setVideoPath(path);
-        videoPreview.setOnPreparedListener(mp -> {
-            seekBarPreview.setMax(mp.getDuration()); seekBarPreview.setProgress(0);
-            tvPreviewTime.setText("00:00 / " + mp.getDuration()); btnPlayPause.setText("▶");
-            btnPlayPause.setOnClickListener(v -> { if (videoPreview.isPlaying()) videoPreview.pause(); else videoPreview.start(); });
-        });
-    }
-
-    private void setupVideoPreviewTicker() { /* Ticker logic */ }
-    private void showSelectedFilesDialog() { /* Dialog logic */ }
+    private String getBaseName() { return originalNames.get(0).replaceAll("[.][^.]+$", ""); }
     private void showToast(String m) { Toast.makeText(this, m, Toast.LENGTH_SHORT).show(); }
     private void updateStatus(String msg) { tvStatus.setText(msg); }
-    private void addToListResult(String text) { TextView tv = new TextView(this); tv.setText(text); tv.setTextColor(Color.parseColor("#38BDF8")); listContainer.addView(tv); }
-    private void setLoading(boolean b) { progressBar.setVisibility(b ? View.VISIBLE : View.GONE); }
+    private void addToListResult(String text) { 
+        TextView tv = new TextView(this); tv.setText(text); tv.setTextColor(Color.parseColor("#38BDF8")); listContainer.addView(tv); 
+    }
+    
+    private void setLoading(boolean b) { 
+        progressBar.setVisibility(b ? View.VISIBLE : View.GONE);
+        btnTrimWithAudio.setEnabled(!b); btnTrimNoAudio.setEnabled(!b);
+        btnLoop.setEnabled(!b); btnMerge.setEnabled(!b); btnRemux.setEnabled(!b);
+        btnSelectVideo.setEnabled(!b); btnSelectMulti.setEnabled(!b);
+        if (b) {
+            if(videoPreview != null && videoPreview.isPlaying()) {
+                videoPreview.pause(); btnPlayPause.setText("▶");
+            }
+            if (btnPlayPause != null) btnPlayPause.setEnabled(false);
+        } else {
+            if (btnPlayPause != null) btnPlayPause.setEnabled(true);
+        }
+    }
 }

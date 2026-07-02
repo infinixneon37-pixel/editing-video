@@ -3,32 +3,35 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0A0F1C"
+    android:background="#080E14"
     android:orientation="vertical">
 
+    <!-- FIXED TOP BLOCK: HEADER & VIDEO PREVIEW -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp"
-        android:background="#111827">
+        android:background="#111C24">
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Video Editor Pro"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="#F8FAFC"
+            android:textColor="#F1F5F9"
             android:gravity="center"
+            android:letterSpacing="0.05"
             android:layout_marginBottom="12dp"/>
 
+        <!-- PREMIUM VIDEO PREVIEW CARD -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardPreview"
             android:layout_width="match_parent"
             android:layout_height="220dp"
-            app:cardCornerRadius="12dp"
-            app:cardBackgroundColor="#000000"
+            app:cardCornerRadius="16dp"
+            app:cardBackgroundColor="#03070A"
             app:cardElevation="0dp">
 
             <FrameLayout
@@ -45,42 +48,48 @@
                     android:id="@+id/tvEmptyPreview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TIDAK ADA VIDEO"
-                    android:textColor="#475569"
+                    android:text="💡 Pilih video untuk memulai preview"
+                    android:textColor="#4A5E6D"
+                    android:textSize="13sp"
                     android:textStyle="bold"
                     android:layout_gravity="center"/>
             </FrameLayout>
         </androidx.cardview.widget.CardView>
 
+        <!-- PLAYER SECTOR WITH REFRESHING BLUE/MINT ACCENTS -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="12dp">
             
             <SeekBar
                 android:id="@+id/seekBarPreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:progressTint="#3B82F6"
-                android:thumbTint="#3B82F6"/>
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:progressTint="#22D3EE"
+                android:thumbTint="#22D3EE"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="8dp">
+                android:layout_marginTop="6dp">
 
                 <TextView
                     android:id="@+id/btnPlayPause"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
                     android:text="▶"
-                    android:textSize="24sp"
-                    android:textColor="#3B82F6"
+                    android:textSize="18sp"
+                    android:textColor="#22D3EE"
+                    android:gravity="center"
                     android:clickable="true"
-                    android:focusable="true"/>
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"/>
 
                 <TextView
                     android:id="@+id/tvPreviewTime"
@@ -95,12 +104,14 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- FIXED MIDDLE BLOCK: SLIM SLATE FILE MANAGER BAR -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp"
-        android:background="#1E293B"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp"
+        android:background="#162530"
         android:gravity="center_vertical">
 
         <LinearLayout
@@ -118,90 +129,103 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="📹 [Belum ada video]"
-                android:textColor="#F8FAFC"
+                android:textColor="#F1F5F9"
                 android:textStyle="bold"
-                android:textSize="14sp"/>
+                android:textSize="13sp"
+                android:singleLine="true"
+                android:ellipsize="end"/>
 
             <TextView
                 android:id="@+id/tvBatchCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="📁 0 file dipilih (tap untuk melihat)"
+                android:text="📁 0 file dipilih (tap untuk detail)"
                 android:textColor="#64748B"
-                android:textSize="11sp"/>
+                android:textSize="11sp"
+                android:layout_marginTop="1dp"/>
         </LinearLayout>
 
         <Button
             android:id="@+id/btnSelectVideo"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:text="+ VIDEO"
             android:textSize="10sp"
-            android:backgroundTint="#3B82F6"
-            android:layout_marginEnd="8dp"/>
+            android:textStyle="bold"
+            android:textColor="#080E14"
+            android:backgroundTint="#22D3EE"
+            android:layout_marginEnd="6dp"/>
 
         <Button
             android:id="@+id/btnSelectMultiVideo"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:text="+ BATCH"
             android:textSize="10sp"
-            android:backgroundTint="#7C3AED"/>
+            android:textStyle="bold"
+            android:textColor="#F1F5F9"
+            android:backgroundTint="#6366F1"/>
     </LinearLayout>
 
+    <!-- FIXED NAVIGATION TABS (MINT/TEAL HIGH SCANNABILITY) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="#0F172A"
+        android:background="#0D161E"
         android:weightSum="4">
 
         <TextView
             android:id="@+id/tabTrim"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="✂️\nTrim"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:gravity="center"
-            android:textColor="#3B82F6"
-            android:background="#1E293B"
-            android:clickable="true"/>
+            android:textColor="#22D3EE"
+            android:background="#162530"
+            android:clickable="true"
+            android:focusable="true"/>
 
         <TextView
             android:id="@+id/tabLoop"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="🔁\nLoop"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:gravity="center"
             android:textColor="#64748B"
-            android:clickable="true"/>
+            android:clickable="true"
+            android:focusable="true"/>
 
         <TextView
             android:id="@+id/tabMerge"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="🎬\nGabung"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:gravity="center"
             android:textColor="#64748B"
-            android:clickable="true"/>
+            android:clickable="true"
+            android:focusable="true"/>
 
         <TextView
             android:id="@+id/tabConvert"
             android:layout_width="0dp"
-            android:layout_height="50dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
             android:text="🔄\nConvert"
-            android:textSize="12sp"
+            android:textSize="11sp"
             android:gravity="center"
             android:textColor="#64748B"
-            android:clickable="true"/>
+            android:clickable="true"
+            android:focusable="true"/>
     </LinearLayout>
 
+    <!-- DYNAMIC SCROLLABLE CONTENT PANELS -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
@@ -212,24 +236,26 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
+                <!-- PANEL 1: TRIM -->
                 <LinearLayout
                     android:id="@+id/panelTrim"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:visibility="visible">
 
                     <RadioGroup 
                         android:id="@+id/rgTrimMode" 
                         android:layout_width="match_parent" 
                         android:layout_height="wrap_content" 
                         android:orientation="horizontal" 
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="16dp">
                         <RadioButton 
                             android:id="@+id/rbTrimAuto" 
                             android:layout_width="0dp" 
@@ -237,7 +263,7 @@
                             android:layout_height="wrap_content" 
                             android:text="Auto Split" 
                             android:textColor="#E2E8F0" 
-                            android:buttonTint="#3B82F6" 
+                            android:buttonTint="#22D3EE" 
                             android:checked="true"/>
                         <RadioButton 
                             android:id="@+id/rbTrimCustom" 
@@ -245,7 +271,7 @@
                             android:layout_weight="1" 
                             android:layout_height="wrap_content" 
                             android:text="Spesifik" 
-                            android:buttonTint="#3B82F6" 
+                            android:buttonTint="#22D3EE" 
                             android:textColor="#E2E8F0"/>
                     </RadioGroup>
 
@@ -254,12 +280,11 @@
                         android:layout_width="match_parent" 
                         android:layout_height="wrap_content" 
                         android:hint="Durasi per part (detik)" 
-                        android:textColor="#FFF" 
-                        android:textColorHint="#64748B" 
-                        android:background="#1E293B" 
-                        android:padding="12dp" 
+                        android:textColor="#F1F5F9" 
+                        android:textColorHint="#4A5E6D" 
+                        android:background="#162530" 
+                        android:padding="14dp" 
                         android:inputType="numberDecimal" 
-                        android:digits="0123456789."
                         android:imeOptions="actionDone"
                         android:maxLines="1"
                         android:layout_marginBottom="16dp"/>
@@ -276,13 +301,12 @@
                             android:layout_width="0dp" 
                             android:layout_weight="1" 
                             android:layout_height="wrap_content" 
-                            android:hint="Start (misal 5.0)" 
-                            android:textColor="#FFF" 
-                            android:background="#1E293B" 
-                            android:padding="12dp" 
-                            android:layout_marginEnd="4dp" 
+                            android:hint="Start (detik)" 
+                            android:textColor="#F1F5F9" 
+                            android:background="#162530" 
+                            android:padding="14dp" 
+                            android:layout_marginEnd="6dp" 
                             android:inputType="numberDecimal"
-                            android:digits="0123456789."
                             android:imeOptions="actionDone"
                             android:maxLines="1"/>
                         <EditText 
@@ -290,13 +314,12 @@
                             android:layout_width="0dp" 
                             android:layout_weight="1" 
                             android:layout_height="wrap_content" 
-                            android:hint="End (misal 15.0)" 
-                            android:textColor="#FFF" 
-                            android:background="#1E293B" 
-                            android:padding="12dp" 
-                            android:layout_marginStart="4dp" 
+                            android:hint="End (detik)" 
+                            android:textColor="#F1F5F9" 
+                            android:background="#162530" 
+                            android:padding="14dp" 
+                            android:layout_marginStart="6dp" 
                             android:inputType="numberDecimal"
-                            android:digits="0123456789."
                             android:imeOptions="actionDone"
                             android:maxLines="1"/>
                     </LinearLayout>
@@ -304,18 +327,23 @@
                     <Button 
                         android:id="@+id/btnTrimWithAudio" 
                         android:layout_width="match_parent" 
-                        android:layout_height="wrap_content" 
+                        android:layout_height="48dp" 
                         android:text="✂️ EKSEKUSI TRIM (AUDIO)" 
-                        android:backgroundTint="#2563EB" 
+                        android:textColor="#F1F5F9"
+                        android:textStyle="bold"
+                        android:backgroundTint="#0284C7" 
                         android:layout_marginBottom="8dp"/>
                     <Button 
                         android:id="@+id/btnTrimNoAudio" 
                         android:layout_width="match_parent" 
-                        android:layout_height="wrap_content" 
-                        android:text="✂️ EKSEKUSI TRIM (NO AUDIO)" 
-                        android:backgroundTint="#0891B2"/>
+                        android:layout_height="48dp" 
+                        android:text="🔇 EKSEKUSI TRIM (MUTED)" 
+                        android:textColor="#F1F5F9"
+                        android:textStyle="bold"
+                        android:backgroundTint="#0D9488"/>
                 </LinearLayout>
 
+                <!-- PANEL 2: LOOP -->
                 <LinearLayout
                     android:id="@+id/panelLoop"
                     android:layout_width="match_parent"
@@ -327,28 +355,30 @@
                         android:id="@+id/rgLoopMode" 
                         android:layout_width="match_parent" 
                         android:layout_height="wrap_content" 
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="16dp">
                         <RadioButton 
                             android:id="@+id/rbLoopNormal" 
                             android:layout_width="match_parent" 
                             android:layout_height="wrap_content" 
-                            android:text="Loop A-B (Normal)" 
-                            android:buttonTint="#9333EA" 
+                            android:text="Loop A-B (Normal + Audio)" 
+                            android:buttonTint="#8B5CF6" 
                             android:textColor="#E2E8F0" 
-                            android:checked="true"/>
+                            android:checked="true"
+                            android:layout_marginBottom="4dp"/>
                         <RadioButton 
                             android:id="@+id/rbLoopTwerk" 
                             android:layout_width="match_parent" 
                             android:layout_height="wrap_content" 
-                            android:text="Twerk Mode" 
-                            android:buttonTint="#9333EA" 
-                            android:textColor="#E2E8F0"/>
+                            android:text="Twerk Filter (Maju Mundur Halus)" 
+                            android:buttonTint="#8B5CF6" 
+                            android:textColor="#E2E8F0"
+                            android:layout_marginBottom="4dp"/>
                         <RadioButton 
                             android:id="@+id/rbLoopBoomerang" 
                             android:layout_width="match_parent" 
                             android:layout_height="wrap_content" 
-                            android:text="Boomerang Mode" 
-                            android:buttonTint="#9333EA" 
+                            android:text="Boomerang (Audio Tetap Normal)" 
+                            android:buttonTint="#8B5CF6" 
                             android:textColor="#E2E8F0"/>
                     </RadioGroup>
 
@@ -356,13 +386,12 @@
                         android:id="@+id/etLoopDuration" 
                         android:layout_width="match_parent" 
                         android:layout_height="wrap_content" 
-                        android:hint="Target durasi (detik)" 
-                        android:textColor="#FFF" 
-                        android:textColorHint="#64748B" 
-                        android:background="#1E293B" 
-                        android:padding="12dp" 
+                        android:hint="Target durasi loop (detik)" 
+                        android:textColor="#F1F5F9" 
+                        android:textColorHint="#4A5E6D" 
+                        android:background="#162530" 
+                        android:padding="14dp" 
                         android:inputType="numberDecimal"
-                        android:digits="0123456789."
                         android:imeOptions="actionDone"
                         android:maxLines="1"
                         android:layout_marginBottom="16dp"/>
@@ -370,11 +399,14 @@
                     <Button 
                         android:id="@+id/btnLoop" 
                         android:layout_width="match_parent" 
-                        android:layout_height="wrap_content" 
-                        android:text="🔁 EKSEKUSI LOOP" 
-                        android:backgroundTint="#EA580C"/>
+                        android:layout_height="48dp" 
+                        android:text="🔁 EKSEKUSI FLUID LOOP" 
+                        android:textColor="#F1F5F9"
+                        android:textStyle="bold"
+                        android:backgroundTint="#7C3AED"/>
                 </LinearLayout>
 
+                <!-- PANEL 3: MERGE -->
                 <LinearLayout
                     android:id="@+id/panelMerge"
                     android:layout_width="match_parent"
@@ -384,17 +416,21 @@
                     <TextView 
                         android:layout_width="match_parent" 
                         android:layout_height="wrap_content" 
-                        android:text="Gabungkan semua file batch (Fast Concat)" 
+                        android:text="Menggabungkan seluruh video batch ke satu file mp4 aman (Re-encode Engine)." 
                         android:textColor="#94A3B8" 
+                        android:textSize="12sp"
                         android:layout_marginBottom="16dp"/>
                     <Button 
                         android:id="@+id/btnMerge" 
                         android:layout_width="match_parent" 
-                        android:layout_height="wrap_content" 
-                        android:text="🎬 GABUNG VIDEO" 
-                        android:backgroundTint="#059669"/>
+                        android:layout_height="48dp" 
+                        android:text="🎬 GABUNGKAN BATCH (ANTI-MACET)" 
+                        android:textColor="#F1F5F9"
+                        android:textStyle="bold"
+                        android:backgroundTint="#10B981"/>
                 </LinearLayout>
 
+                <!-- PANEL 4: CONVERT -->
                 <LinearLayout
                     android:id="@+id/panelConvert"
                     android:layout_width="match_parent"
@@ -404,49 +440,57 @@
                     <TextView 
                         android:layout_width="match_parent" 
                         android:layout_height="wrap_content" 
-                        android:text="Konversi batch ke standar MP4 (H.264/AAC)" 
+                        android:text="Normalisasi codec video ke MP4 standar universal (H.264 / AAC)." 
                         android:textColor="#94A3B8" 
+                        android:textSize="12sp"
                         android:layout_marginBottom="16dp"/>
                     <Button 
                         android:id="@+id/btnRemux" 
                         android:layout_width="match_parent" 
-                        android:layout_height="wrap_content" 
-                        android:text="🔄 CONVERT BATCH" 
-                        android:backgroundTint="#0284C7"/>
+                        android:layout_height="48dp" 
+                        android:text="🔄 CONVERT KE STANDAR MP4" 
+                        android:textColor="#080E14"
+                        android:textStyle="bold"
+                        android:backgroundTint="#F59E0B"/>
                 </LinearLayout>
             </FrameLayout>
 
+            <!-- CONSOLE EXECUTION RECORDS CONTAINER -->
             <LinearLayout
                 android:id="@+id/listContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="24dp"/>
+                android:layout_marginTop="20dp"/>
 
         </LinearLayout>
     </ScrollView>
 
+    <!-- FIXED FOOTER CONTROL BAR (STATUS INDICATORS) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp"
-        android:background="#050811">
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="#03070A"
+        android:gravity="center">
+
         <ProgressBar 
             android:id="@+id/progressBar" 
-            android:layout_width="24dp" 
-            android:layout_height="24dp" 
-            android:layout_gravity="center" 
+            android:layout_width="18dp" 
+            android:layout_height="18dp" 
+            android:layout_marginEnd="8dp"
+            android:indeterminateTint="#34D399"
             android:visibility="gone"/>
+
         <TextView 
             android:id="@+id/tvStatus" 
-            android:layout_width="match_parent" 
+            android:layout_width="wrap_content" 
             android:layout_height="wrap_content" 
-            android:text="🟢 Siap" 
-            android:textColor="#10B981" 
-            android:gravity="center" 
-            android:textSize="12sp" 
-            android:layout_marginTop="4dp"/>
+            android:text="🟢 Standby. Siap dieksekusi." 
+            android:textColor="#34D399" 
+            android:textStyle="bold"
+            android:textSize="12sp"/>
     </LinearLayout>
 
 </LinearLayout>
