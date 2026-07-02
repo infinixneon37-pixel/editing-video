@@ -30,17 +30,17 @@
             app:cardCornerRadius="12dp"
             app:cardBackgroundColor="#000000"
             app:cardElevation="0dp">
-            
+
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
-                
+
                 <VideoView
                     android:id="@+id/videoPreview"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_gravity="center"/>
-                    
+
                 <TextView
                     android:id="@+id/tvEmptyPreview"
                     android:layout_width="wrap_content"
@@ -57,19 +57,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginTop="8dp">
+            
             <SeekBar
                 android:id="@+id/seekBarPreview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:progressTint="#3B82F6"
                 android:thumbTint="#3B82F6"/>
-            
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
                 android:paddingHorizontal="8dp">
+
                 <TextView
                     android:id="@+id/btnPlayPause"
                     android:layout_width="wrap_content"
@@ -79,6 +81,7 @@
                     android:textColor="#3B82F6"
                     android:clickable="true"
                     android:focusable="true"/>
+
                 <TextView
                     android:id="@+id/tvPreviewTime"
                     android:layout_width="match_parent"
@@ -99,7 +102,7 @@
         android:padding="16dp"
         android:background="#1E293B"
         android:gravity="center_vertical">
-        
+
         <LinearLayout
             android:id="@+id/btnViewFiles"
             android:layout_width="0dp"
@@ -109,6 +112,7 @@
             android:clickable="true"
             android:focusable="true"
             android:background="?attr/selectableItemBackground">
+
             <TextView
                 android:id="@+id/tvActiveFile"
                 android:layout_width="wrap_content"
@@ -117,6 +121,7 @@
                 android:textColor="#F8FAFC"
                 android:textStyle="bold"
                 android:textSize="14sp"/>
+
             <TextView
                 android:id="@+id/tvBatchCount"
                 android:layout_width="wrap_content"
@@ -134,7 +139,7 @@
             android:textSize="10sp"
             android:backgroundTint="#3B82F6"
             android:layout_marginEnd="8dp"/>
-            
+
         <Button
             android:id="@+id/btnSelectMultiVideo"
             android:layout_width="wrap_content"
@@ -150,6 +155,7 @@
         android:orientation="horizontal"
         android:background="#0F172A"
         android:weightSum="4">
+
         <TextView
             android:id="@+id/tabTrim"
             android:layout_width="0dp"
@@ -161,6 +167,7 @@
             android:textColor="#3B82F6"
             android:background="#1E293B"
             android:clickable="true"/>
+
         <TextView
             android:id="@+id/tabLoop"
             android:layout_width="0dp"
@@ -171,6 +178,7 @@
             android:gravity="center"
             android:textColor="#64748B"
             android:clickable="true"/>
+
         <TextView
             android:id="@+id/tabMerge"
             android:layout_width="0dp"
@@ -181,6 +189,7 @@
             android:gravity="center"
             android:textColor="#64748B"
             android:clickable="true"/>
+
         <TextView
             android:id="@+id/tabConvert"
             android:layout_width="0dp"
@@ -198,7 +207,7 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:fillViewport="true">
-        
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -208,27 +217,103 @@
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-                
+
                 <LinearLayout
                     android:id="@+id/panelTrim"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
-                    
-                    <RadioGroup android:id="@+id/rgTrimMode" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="12dp">
-                        <RadioButton android:id="@+id/rbTrimAuto" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Auto Split" android:textColor="#E2E8F0" android:buttonTint="#3B82F6" android:checked="true"/>
-                        <RadioButton android:id="@+id/rbTrimCustom" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="Spesifik" android:buttonTint="#3B82F6" android:textColor="#E2E8F0"/>
+
+                    <RadioGroup 
+                        android:id="@+id/rgTrimMode" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:orientation="horizontal" 
+                        android:layout_marginBottom="12dp">
+                        <RadioButton 
+                            android:id="@+id/rbTrimAuto" 
+                            android:layout_width="0dp" 
+                            android:layout_weight="1" 
+                            android:layout_height="wrap_content" 
+                            android:text="Auto Split" 
+                            android:textColor="#E2E8F0" 
+                            android:buttonTint="#3B82F6" 
+                            android:checked="true"/>
+                        <RadioButton 
+                            android:id="@+id/rbTrimCustom" 
+                            android:layout_width="0dp" 
+                            android:layout_weight="1" 
+                            android:layout_height="wrap_content" 
+                            android:text="Spesifik" 
+                            android:buttonTint="#3B82F6" 
+                            android:textColor="#E2E8F0"/>
                     </RadioGroup>
 
-                    <EditText android:id="@+id/etTrimSegment" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Durasi per part (detik)" android:textColor="#FFF" android:textColorHint="#64748B" android:background="#1E293B" android:padding="12dp" android:inputType="numberDecimal" android:layout_marginBottom="16dp"/>
-                    
-                    <LinearLayout android:id="@+id/layoutTrimCustom" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:visibility="gone" android:layout_marginBottom="16dp">
-                        <EditText android:id="@+id/etTrimStart" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:hint="Start (misal 5.0)" android:textColor="#FFF" android:background="#1E293B" android:padding="12dp" android:layout_marginEnd="4dp" android:inputType="numberDecimal"/>
-                        <EditText android:id="@+id/etTrimEnd" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:hint="End (misal 15.0)" android:textColor="#FFF" android:background="#1E293B" android:padding="12dp" android:layout_marginStart="4dp" android:inputType="numberDecimal"/>
+                    <EditText 
+                        android:id="@+id/etTrimSegment" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:hint="Durasi per part (detik)" 
+                        android:textColor="#FFF" 
+                        android:textColorHint="#64748B" 
+                        android:background="#1E293B" 
+                        android:padding="12dp" 
+                        android:inputType="numberDecimal" 
+                        android:digits="0123456789."
+                        android:imeOptions="actionDone"
+                        android:maxLines="1"
+                        android:layout_marginBottom="16dp"/>
+
+                    <LinearLayout 
+                        android:id="@+id/layoutTrimCustom" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:orientation="horizontal" 
+                        android:visibility="gone" 
+                        android:layout_marginBottom="16dp">
+                        <EditText 
+                            android:id="@+id/etTrimStart" 
+                            android:layout_width="0dp" 
+                            android:layout_weight="1" 
+                            android:layout_height="wrap_content" 
+                            android:hint="Start (misal 5.0)" 
+                            android:textColor="#FFF" 
+                            android:background="#1E293B" 
+                            android:padding="12dp" 
+                            android:layout_marginEnd="4dp" 
+                            android:inputType="numberDecimal"
+                            android:digits="0123456789."
+                            android:imeOptions="actionDone"
+                            android:maxLines="1"/>
+                        <EditText 
+                            android:id="@+id/etTrimEnd" 
+                            android:layout_width="0dp" 
+                            android:layout_weight="1" 
+                            android:layout_height="wrap_content" 
+                            android:hint="End (misal 15.0)" 
+                            android:textColor="#FFF" 
+                            android:background="#1E293B" 
+                            android:padding="12dp" 
+                            android:layout_marginStart="4dp" 
+                            android:inputType="numberDecimal"
+                            android:digits="0123456789."
+                            android:imeOptions="actionDone"
+                            android:maxLines="1"/>
                     </LinearLayout>
 
-                    <Button android:id="@+id/btnTrimWithAudio" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="✂️ EKSEKUSI TRIM (AUDIO)" android:backgroundTint="#2563EB" android:layout_marginBottom="8dp"/>
-                    <Button android:id="@+id/btnTrimNoAudio" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="✂️ EKSEKUSI TRIM (NO AUDIO)" android:backgroundTint="#0891B2"/>
+                    <Button 
+                        android:id="@+id/btnTrimWithAudio" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="✂️ EKSEKUSI TRIM (AUDIO)" 
+                        android:backgroundTint="#2563EB" 
+                        android:layout_marginBottom="8dp"/>
+                    <Button 
+                        android:id="@+id/btnTrimNoAudio" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="✂️ EKSEKUSI TRIM (NO AUDIO)" 
+                        android:backgroundTint="#0891B2"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -237,15 +322,57 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="gone">
-                    
-                    <RadioGroup android:id="@+id/rgLoopMode" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp">
-                        <RadioButton android:id="@+id/rbLoopNormal" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Loop A-B (Normal)" android:buttonTint="#9333EA" android:textColor="#E2E8F0" android:checked="true"/>
-                        <RadioButton android:id="@+id/rbLoopTwerk" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Twerk Mode" android:buttonTint="#9333EA" android:textColor="#E2E8F0"/>
-                        <RadioButton android:id="@+id/rbLoopBoomerang" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Boomerang Mode" android:buttonTint="#9333EA" android:textColor="#E2E8F0"/>
+
+                    <RadioGroup 
+                        android:id="@+id/rgLoopMode" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:layout_marginBottom="12dp">
+                        <RadioButton 
+                            android:id="@+id/rbLoopNormal" 
+                            android:layout_width="match_parent" 
+                            android:layout_height="wrap_content" 
+                            android:text="Loop A-B (Normal)" 
+                            android:buttonTint="#9333EA" 
+                            android:textColor="#E2E8F0" 
+                            android:checked="true"/>
+                        <RadioButton 
+                            android:id="@+id/rbLoopTwerk" 
+                            android:layout_width="match_parent" 
+                            android:layout_height="wrap_content" 
+                            android:text="Twerk Mode" 
+                            android:buttonTint="#9333EA" 
+                            android:textColor="#E2E8F0"/>
+                        <RadioButton 
+                            android:id="@+id/rbLoopBoomerang" 
+                            android:layout_width="match_parent" 
+                            android:layout_height="wrap_content" 
+                            android:text="Boomerang Mode" 
+                            android:buttonTint="#9333EA" 
+                            android:textColor="#E2E8F0"/>
                     </RadioGroup>
 
-                    <EditText android:id="@+id/etLoopDuration" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Target durasi (detik)" android:textColor="#FFF" android:textColorHint="#64748B" android:background="#1E293B" android:padding="12dp" android:inputType="number" android:layout_marginBottom="16dp"/>
-                    <Button android:id="@+id/btnLoop" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔁 EKSEKUSI LOOP" android:backgroundTint="#EA580C"/>
+                    <EditText 
+                        android:id="@+id/etLoopDuration" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:hint="Target durasi (detik)" 
+                        android:textColor="#FFF" 
+                        android:textColorHint="#64748B" 
+                        android:background="#1E293B" 
+                        android:padding="12dp" 
+                        android:inputType="numberDecimal"
+                        android:digits="0123456789."
+                        android:imeOptions="actionDone"
+                        android:maxLines="1"
+                        android:layout_marginBottom="16dp"/>
+
+                    <Button 
+                        android:id="@+id/btnLoop" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="🔁 EKSEKUSI LOOP" 
+                        android:backgroundTint="#EA580C"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -254,8 +381,18 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="gone">
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Gabungkan semua file batch (Fast Concat)" android:textColor="#94A3B8" android:layout_marginBottom="16dp"/>
-                    <Button android:id="@+id/btnMerge" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🎬 GABUNG VIDEO" android:backgroundTint="#059669"/>
+                    <TextView 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="Gabungkan semua file batch (Fast Concat)" 
+                        android:textColor="#94A3B8" 
+                        android:layout_marginBottom="16dp"/>
+                    <Button 
+                        android:id="@+id/btnMerge" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="🎬 GABUNG VIDEO" 
+                        android:backgroundTint="#059669"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -264,10 +401,19 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="gone">
-                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Konversi batch ke standar MP4 (H.264/AAC)" android:textColor="#94A3B8" android:layout_marginBottom="16dp"/>
-                    <Button android:id="@+id/btnRemux" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🔄 CONVERT BATCH" android:backgroundTint="#0284C7"/>
+                    <TextView 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="Konversi batch ke standar MP4 (H.264/AAC)" 
+                        android:textColor="#94A3B8" 
+                        android:layout_marginBottom="16dp"/>
+                    <Button 
+                        android:id="@+id/btnRemux" 
+                        android:layout_width="match_parent" 
+                        android:layout_height="wrap_content" 
+                        android:text="🔄 CONVERT BATCH" 
+                        android:backgroundTint="#0284C7"/>
                 </LinearLayout>
-
             </FrameLayout>
 
             <LinearLayout
@@ -276,7 +422,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:layout_marginTop="24dp"/>
-                
+
         </LinearLayout>
     </ScrollView>
 
@@ -286,8 +432,21 @@
         android:orientation="vertical"
         android:padding="8dp"
         android:background="#050811">
-        <ProgressBar android:id="@+id/progressBar" android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center" android:visibility="gone"/>
-        <TextView android:id="@+id/tvStatus" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🟢 Siap" android:textColor="#10B981" android:gravity="center" android:textSize="12sp" android:layout_marginTop="4dp"/>
+        <ProgressBar 
+            android:id="@+id/progressBar" 
+            android:layout_width="24dp" 
+            android:layout_height="24dp" 
+            android:layout_gravity="center" 
+            android:visibility="gone"/>
+        <TextView 
+            android:id="@+id/tvStatus" 
+            android:layout_width="match_parent" 
+            android:layout_height="wrap_content" 
+            android:text="🟢 Siap" 
+            android:textColor="#10B981" 
+            android:gravity="center" 
+            android:textSize="12sp" 
+            android:layout_marginTop="4dp"/>
     </LinearLayout>
 
 </LinearLayout>
